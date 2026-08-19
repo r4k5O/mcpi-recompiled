@@ -25,6 +25,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Python MCPI client
+        run: python -m pip install mcpi==1.2.1
+
       - name: Configure
         run: cmake -S . -B build -DMCPI_BUILD_TESTS=ON
 
