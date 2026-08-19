@@ -22,6 +22,7 @@ add_library(mcpi_core
     src/game/GameState.cpp
     src/world/Chunk.cpp
     src/world/World.cpp
+    src/world/WorldGenerator.cpp
 )
 
 target_include_directories(mcpi_core
