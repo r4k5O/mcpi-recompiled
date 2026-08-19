@@ -40,6 +40,10 @@ def main() -> int:
             fail(f"unexpected player position: {position}")
 
         mc.setBlock(1, 2, 3, 57)
+        stored_block = mc.getBlock(1, 2, 3)
+        if stored_block != 57:
+            fail(f"setBlock/getBlock round trip returned {stored_block}, expected 57")
+
         mc.postToChat("Hello from Python")
 
         return_code = host.wait(timeout=10)
@@ -47,7 +51,7 @@ def main() -> int:
             stderr = host.stderr.read() if host.stderr is not None else ""
             fail(f"C++ host exited with {return_code}. stderr: {stderr}")
 
-        print("mcpi Python API smoke test passed.")
+        print("mcpi Python API smoke test passed against reconstructed GameState.")
         return 0
     finally:
         if host.poll() is None:
