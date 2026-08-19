@@ -12,7 +12,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(Threads REQUIRED)
+
 add_library(mcpi_core
+    src/api/ApiServer.cpp
     src/api/Command.cpp
 )
 
@@ -22,6 +25,11 @@ target_include_directories(mcpi_core
 )
 
 target_compile_features(mcpi_core PUBLIC cxx_std_20)
+target_link_libraries(mcpi_core PUBLIC Threads::Threads)
+
+if(WIN32)
+    target_link_libraries(mcpi_core PUBLIC ws2_32)
+endif()
 
 if(MSVC)
     target_compile_options(mcpi_core PRIVATE /W4 /permissive-)
@@ -43,5 +51,11 @@ if(MCPI_BUILD_TESTS)
     )
     target_link_libraries(mcpi_protocol_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_api_server_tests
+        tests/api_server_tests.cpp
+    )
+    target_link_libraries(mcpi_api_server_tests PRIVATE mcpi_core)
+
     add_test(NAME protocol COMMAND mcpi_protocol_tests)
+    add_test(NAME api_server COMMAND mcpi_api_server_tests)
 endif()
