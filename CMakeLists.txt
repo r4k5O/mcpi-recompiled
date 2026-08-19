@@ -18,6 +18,8 @@ add_library(mcpi_core
     src/api/ApiDispatcher.cpp
     src/api/ApiServer.cpp
     src/api/Command.cpp
+    src/game/GameState.cpp
+    src/world/World.cpp
 )
 
 target_include_directories(mcpi_core
