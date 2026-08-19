@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(mcpi_recompiled
-    VERSION 0.0.1
+    VERSION 0.1.0
     DESCRIPTION "Source reconstruction and native port of Minecraft: Pi Edition 0.1.1"
     LANGUAGES CXX
 )
 
 option(MCPI_BUILD_TESTS "Build mcpi-recompiled tests" ON)
+option(MCPI_BUILD_CLIENT "Build the native Phase 1 client" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -50,36 +51,41 @@ target_link_libraries(mcpi-recompiled PRIVATE mcpi_core)
 if(MCPI_BUILD_TESTS)
     enable_testing()
     find_program(MCPI_PYTHON_EXECUTABLE NAMES python python3 REQUIRED)
+    find_package(Java REQUIRED COMPONENTS Development Runtime)
 
-    add_executable(mcpi_protocol_tests
-        tests/protocol_tests.cpp
-    )
+    add_executable(mcpi_protocol_tests tests/protocol_tests.cpp)
     target_link_libraries(mcpi_protocol_tests PRIVATE mcpi_core)
 
-    add_executable(mcpi_api_server_tests
-        tests/api_server_tests.cpp
-    )
+    add_executable(mcpi_api_server_tests tests/api_server_tests.cpp)
     target_link_libraries(mcpi_api_server_tests PRIVATE mcpi_core)
 
-    add_executable(mcpi_api_dispatcher_tests
-        tests/api_dispatcher_tests.cpp
-    )
+    add_executable(mcpi_api_dispatcher_tests tests/api_dispatcher_tests.cpp)
     target_link_libraries(mcpi_api_dispatcher_tests PRIVATE mcpi_core)
 
-    add_executable(mcpi_world_backend_tests
-        tests/world_backend_tests.cpp
-    )
+    add_executable(mcpi_world_backend_tests tests/world_backend_tests.cpp)
     target_link_libraries(mcpi_world_backend_tests PRIVATE mcpi_core)
 
-    add_executable(mcpi_chunk_storage_tests
-        tests/chunk_storage_tests.cpp
-    )
+    add_executable(mcpi_chunk_storage_tests tests/chunk_storage_tests.cpp)
     target_link_libraries(mcpi_chunk_storage_tests PRIVATE mcpi_core)
 
-    add_executable(mcpi_python_api_host
-        tests/support/python_api_host.cpp
-    )
+    add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
+
+    file(GLOB_RECURSE MCPI_JAVA_SOURCES CONFIGURE_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/clients/java/src/*.java
+    )
+    set(MCPI_JAVA_CLASSES_DIR ${CMAKE_CURRENT_BINARY_DIR}/java-classes)
+    add_custom_target(mcpi_java_client ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${MCPI_JAVA_CLASSES_DIR}
+        COMMAND ${Java_JAVAC_EXECUTABLE}
+                -encoding UTF-8
+                -d ${MCPI_JAVA_CLASSES_DIR}
+                ${MCPI_JAVA_SOURCES}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
+        SOURCES ${MCPI_JAVA_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
+        COMMENT "Compiling Minecraft Pi Java compatibility client"
+        VERBATIM
+    )
 
     add_test(NAME protocol COMMAND mcpi_protocol_tests)
     add_test(NAME api_server COMMAND mcpi_api_server_tests)
@@ -96,6 +102,13 @@ if(MCPI_BUILD_TESTS)
         NAME main_executable_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/main_executable_smoke.py
+                $<TARGET_FILE:mcpi-recompiled>
+    )
+    add_test(
+        NAME java_api_smoke
+        COMMAND ${Java_JAVA_EXECUTABLE}
+                -cp ${MCPI_JAVA_CLASSES_DIR}
+                JavaApiSmoke
                 $<TARGET_FILE:mcpi-recompiled>
     )
 endif()
