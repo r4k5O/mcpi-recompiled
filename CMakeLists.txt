@@ -19,6 +19,7 @@ add_library(mcpi_core
     src/api/ApiServer.cpp
     src/api/Command.cpp
     src/game/GameState.cpp
+    src/world/Chunk.cpp
     src/world/World.cpp
 )
 
@@ -70,6 +71,11 @@ if(MCPI_BUILD_TESTS)
     )
     target_link_libraries(mcpi_world_backend_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_chunk_storage_tests
+        tests/chunk_storage_tests.cpp
+    )
+    target_link_libraries(mcpi_chunk_storage_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host
         tests/support/python_api_host.cpp
     )
@@ -79,6 +85,7 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME api_server COMMAND mcpi_api_server_tests)
     add_test(NAME api_dispatcher COMMAND mcpi_api_dispatcher_tests)
     add_test(NAME world_backend COMMAND mcpi_world_backend_tests)
+    add_test(NAME chunk_storage COMMAND mcpi_chunk_storage_tests)
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
