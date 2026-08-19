@@ -46,7 +46,7 @@ target_link_libraries(mcpi-recompiled PRIVATE mcpi_core)
 
 if(MCPI_BUILD_TESTS)
     enable_testing()
-    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    find_program(MCPI_PYTHON_EXECUTABLE NAMES python REQUIRED)
 
     add_executable(mcpi_protocol_tests
         tests/protocol_tests.cpp
@@ -73,7 +73,7 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME api_dispatcher COMMAND mcpi_api_dispatcher_tests)
     add_test(
         NAME python_api_smoke
-        COMMAND ${Python3_EXECUTABLE}
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_smoke.py
                 $<TARGET_FILE:mcpi_python_api_host>
     )
