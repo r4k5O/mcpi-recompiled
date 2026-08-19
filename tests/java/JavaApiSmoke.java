@@ -14,7 +14,7 @@ public final class JavaApiSmoke {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) throw new IllegalArgumentException("expected mcpi-recompiled executable path");
 
-        Process process = new ProcessBuilder(args[0], "--port", "0")
+        Process process = new ProcessBuilder(args[0], "--headless", "--port", "0")
             .redirectErrorStream(true)
             .start();
 
