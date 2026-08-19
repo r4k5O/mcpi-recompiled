@@ -49,18 +49,18 @@ SDL_FColor block_color(int id, float shade = 1.0f) {
     float b = 0.55f;
 
     switch (id) {
-    case 1:  r = 0.50f; g = 0.50f; b = 0.52f; break; // stone
-    case 2:  r = 0.26f; g = 0.68f; b = 0.22f; break; // grass
-    case 3:  r = 0.48f; g = 0.31f; b = 0.18f; break; // dirt
-    case 4:  r = 0.42f; g = 0.42f; b = 0.43f; break; // cobble
-    case 5:  r = 0.64f; g = 0.48f; b = 0.26f; break; // planks
-    case 7:  r = 0.25f; g = 0.25f; b = 0.26f; break; // bedrock
-    case 20: r = 0.62f; g = 0.82f; b = 0.90f; break; // glass
-    case 41: r = 0.92f; g = 0.74f; b = 0.16f; break; // gold
-    case 45: r = 0.66f; g = 0.28f; b = 0.20f; break; // brick
-    case 46: r = 0.74f; g = 0.22f; b = 0.18f; break; // TNT
-    case 57: r = 0.18f; g = 0.84f; b = 0.86f; break; // diamond
-    case 89: r = 0.92f; g = 0.78f; b = 0.34f; break; // glowstone
+    case 1:  r = 0.50f; g = 0.50f; b = 0.52f; break;
+    case 2:  r = 0.26f; g = 0.68f; b = 0.22f; break;
+    case 3:  r = 0.48f; g = 0.31f; b = 0.18f; break;
+    case 4:  r = 0.42f; g = 0.42f; b = 0.43f; break;
+    case 5:  r = 0.64f; g = 0.48f; b = 0.26f; break;
+    case 7:  r = 0.25f; g = 0.25f; b = 0.26f; break;
+    case 20: r = 0.62f; g = 0.82f; b = 0.90f; break;
+    case 41: r = 0.92f; g = 0.74f; b = 0.16f; break;
+    case 45: r = 0.66f; g = 0.28f; b = 0.20f; break;
+    case 46: r = 0.74f; g = 0.22f; b = 0.18f; break;
+    case 57: r = 0.18f; g = 0.84f; b = 0.86f; break;
+    case 89: r = 0.92f; g = 0.78f; b = 0.34f; break;
     default: break;
     }
 
@@ -381,9 +381,11 @@ int ClientApp::run() {
                 const SDL_Scancode key = event.key.scancode;
                 if (key == SDL_SCANCODE_ESCAPE) {
                     if (playing) {
-                        std::scoped_lock lock(game_mutex_);
-                        if (game_.generated_world()) {
-                            game_.save(options_.world_path);
+                        {
+                            std::scoped_lock lock(game_mutex_);
+                            if (game_.generated_world()) {
+                                game_.save(options_.world_path);
+                            }
                         }
                         set_playing(false);
                     } else {
@@ -394,18 +396,28 @@ int ClientApp::run() {
 
                 if (!playing) {
                     if (key == SDL_SCANCODE_N) {
-                        std::scoped_lock lock(game_mutex_);
-                        game_.new_world(options_.seed.value_or(default_seed()));
-                        game_.save(options_.world_path);
+                        {
+                            std::scoped_lock lock(game_mutex_);
+                            game_.new_world(options_.seed.value_or(default_seed()));
+                            game_.save(options_.world_path);
+                        }
                         set_playing(true);
                     } else if (key == SDL_SCANCODE_L) {
-                        std::scoped_lock lock(game_mutex_);
-                        if (game_.load(options_.world_path)) {
+                        bool loaded = false;
+                        {
+                            std::scoped_lock lock(game_mutex_);
+                            loaded = game_.load(options_.world_path);
+                        }
+                        if (loaded) {
                             set_playing(true);
                         }
                     } else if (key == SDL_SCANCODE_RETURN) {
-                        std::scoped_lock lock(game_mutex_);
-                        if (game_.generated_world()) {
+                        bool has_world = false;
+                        {
+                            std::scoped_lock lock(game_mutex_);
+                            has_world = game_.generated_world();
+                        }
+                        if (has_world) {
                             set_playing(true);
                         }
                     }
