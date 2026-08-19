@@ -1,50 +1,110 @@
 # mcpi-recompiled
 
-A source-reconstruction and native-port project for **Minecraft: Pi Edition 0.1.1 alpha**, focused first on reproducing the original game and its programming API on modern systems.
+A source-reconstruction and native-port project for **Minecraft: Pi Edition 0.1.1 alpha**, focused on reproducing the original game and its programming API on modern systems.
 
 > [!IMPORTANT]
 > This project is unofficial and is not affiliated with Mojang Studios or Microsoft. It does **not** redistribute the original `minecraft-pi` executable or game assets. Users must obtain any original files they are legally entitled to use themselves.
 
-## Phase 1 goal
+## Phase 1 — functional compatibility foundation ✅
 
-Before adding modern features, the goal is compatibility:
+Phase 1 establishes a runnable modern foundation rather than claiming pixel-perfect or bug-for-bug parity with the original game.
 
-- build natively on modern Linux x86-64 and Windows x86-64;
-- reconstruct the original game behavior incrementally;
-- preserve compatibility with the Minecraft Pi programming API;
-- support the original MCPI protocol on TCP port `4711`;
-- keep original binaries/assets out of Git history;
-- use tests and documented observations to track parity.
+Implemented in Phase 1:
 
-## Status
+- native **Linux x86-64** and **Windows x86-64** builds;
+- an SDL3 desktop client with the original 848×480 window size, first-person mouse look, keyboard movement, hotbar selection, block breaking/placing, a minimal menu, and save/load controls;
+- explicit `--headless` mode for API-only/server-style use;
+- a finite **256×128×256** world model;
+- evidence-driven `LevelChunk` storage with 16×128×16 blocks, packed metadata, light-storage layers, and a 16×16 height map;
+- deterministic seed-based Phase-1 terrain generation;
+- persistent project save files containing seed, spawn, player state, hotbar state, and block overrides;
+- shared world state between direct gameplay and the programming API;
+- the MCPI text protocol on TCP port **4711** with spawn-relative coordinates;
+- world block access/fills/height, player position/tile operations, chat, checkpoints, settings, camera operations, block-hit events, and the distributed entity/player-id compatibility surface;
+- real Python compatibility tests using `mcpi`;
+- an independently written Java compatibility client under package `pi`, tested with Java 25;
+- an integrated `phase1_acceptance` test plus Linux/Windows CI.
 
-🚧 **Bootstrap / research stage.** The repository structure, build system, API compatibility harness, and reconstruction notes are being established first.
+### What Phase 1 does *not* claim
 
-## Reference target
+The following remain reconstruction/parity work rather than being silently treated as complete:
 
-The initial compatibility target is **Minecraft: Pi Edition 0.1.1 alpha**. The original release contains protocol/API reference material which can be used to validate behavior, while original game binaries and assets stay outside this repository.
+- exact original `RandomLevelSource` terrain generation;
+- original textures, sounds, fonts, and other Mojang-owned assets;
+- exact lighting propagation and rendering behavior;
+- exact survival/creative physics, collision, entity AI, networking, and every original UI detail;
+- binary-identical, pixel-identical, or bug-for-bug behavior.
 
-## Build
+Those items are now easier to tackle because Phase 1 provides a tested executable, game state, chunk model, save lifecycle, API clients, and reverse-engineering evidence base.
+
+## Run
+
+A normal build starts the desktop client:
 
 ```bash
-cmake -S . -B build -DMCPI_BUILD_TESTS=ON
-cmake --build build
-ctest --test-dir build --output-on-failure
+./mcpi-recompiled
 ```
 
-## Roadmap
+Useful options:
 
-1. Bootstrap portable C++ build + CI.
-2. Implement a protocol-compatible API test harness.
-3. Document original executable/platform assumptions.
-4. Reconstruct platform-independent game systems in small, testable pieces.
-5. Bring up rendering/input/windowing on modern systems.
-6. Reach playable Pi Edition parity.
-7. Only then consider optional modernization.
+```text
+--port <0-65535>      MCPI API port (default: 4711)
+--headless            Run without a window
+--world <path>        World save path (default: world.mcpiworld)
+--seed <uint32>       Seed used when creating a new world
+--help                Show usage
+```
+
+Desktop controls in the Phase-1 client:
+
+- `N` — create a new world from the menu
+- `L` — load the configured world
+- `Enter` — enter an already loaded world
+- `WASD` — move
+- mouse — look
+- `Space` / `Ctrl` — move vertically in the current Phase-1 movement model
+- `Shift` — faster movement
+- `1`–`9` — select hotbar slot
+- left mouse — break targeted block
+- right mouse — place selected block
+- `F5` — save
+- `F9` — reload
+- `Esc` — return to menu / exit
+
+The MCPI API server runs in the same process, including while the desktop client is active.
+
+## Build and test
+
+```bash
+cmake -S . -B build -DMCPI_BUILD_TESTS=ON -DMCPI_BUILD_CLIENT=ON
+cmake --build build --config Release --parallel
+ctest --test-dir build -C Release --output-on-failure
+```
+
+Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, and the built main executable.
+
+## Reconstruction approach
+
+The initial compatibility target is **Minecraft: Pi Edition 0.1.1 alpha**. Reverse-engineering notes live in `docs/reverse-engineering/` and keep confirmed observations separate from inference.
+
+The repository does not copy proprietary decompiler output. Observed layouts, constants, addresses, behavior, and compatibility tests are used to drive independently written source code.
+
+## Next reconstruction work
+
+With Phase 1's functional surface established, subsequent work can focus on deeper original parity:
+
+1. reconstruct `Level -> ChunkSource -> LevelChunk` behavior in more detail;
+2. reproduce original `RandomLevelSource` generation from binary evidence;
+3. reconstruct light propagation and block-update behavior;
+4. deepen player physics, collision, inventory and entity behavior;
+5. improve rendering/UI fidelity without redistributing original assets;
+6. extend additional modern platform targets only after the compatibility behavior is stable.
+
+Gameplay modernization remains separate from original-parity work.
 
 ## Repository policy
 
-Do not commit original Mojang executables, textures, sounds, packaged game data, or leaked/proprietary source code. Keep reverse-engineering notes factual and source their observations.
+Do not commit original Mojang executables, textures, sounds, packaged game data, or leaked/proprietary source code. Keep reverse-engineering notes factual and distinguish confirmed observations from inference.
 
 ## License
 

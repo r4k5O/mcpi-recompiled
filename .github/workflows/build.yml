@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - "bootstrap/**"
+      - "phase1/**"
   pull_request:
 
 jobs:
@@ -25,14 +26,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Install SDL Linux window dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev \
+            libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev
+
       - name: Install Python MCPI client
         run: python -m pip install mcpi==1.2.1
 
       - name: Configure
-        run: cmake -S . -B build -DMCPI_BUILD_TESTS=ON
+        run: cmake -S . -B build -DMCPI_BUILD_TESTS=ON -DMCPI_BUILD_CLIENT=ON
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --parallel
 
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure

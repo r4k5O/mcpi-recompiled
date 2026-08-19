@@ -15,7 +15,7 @@ def main() -> int:
         return 2
 
     process = subprocess.Popen(
-        [sys.argv[1], "--port", "0"],
+        [sys.argv[1], "--headless", "--port", "0"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
