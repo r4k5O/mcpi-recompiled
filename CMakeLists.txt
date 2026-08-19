@@ -56,6 +56,12 @@ if(MCPI_BUILD_TESTS)
     )
     target_link_libraries(mcpi_api_server_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_api_dispatcher_tests
+        tests/api_dispatcher_tests.cpp
+    )
+    target_link_libraries(mcpi_api_dispatcher_tests PRIVATE mcpi_core)
+
     add_test(NAME protocol COMMAND mcpi_protocol_tests)
     add_test(NAME api_server COMMAND mcpi_api_server_tests)
+    add_test(NAME api_dispatcher COMMAND mcpi_api_dispatcher_tests)
 endif()
