@@ -16,12 +16,12 @@ struct ClientOptions {
 
 class ClientApp {
 public:
-    ClientApp(game::GameState& game, std::mutex& game_mutex, ClientOptions options);
+    ClientApp(game::GameState& game, std::recursive_mutex& game_mutex, ClientOptions options);
     [[nodiscard]] int run();
 
 private:
     game::GameState& game_;
-    std::mutex& game_mutex_;
+    std::recursive_mutex& game_mutex_;
     ClientOptions options_;
 };
 
