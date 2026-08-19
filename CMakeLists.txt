@@ -15,6 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Threads REQUIRED)
 
 add_library(mcpi_core
+    src/api/ApiDispatcher.cpp
     src/api/ApiServer.cpp
     src/api/Command.cpp
 )
@@ -45,6 +46,7 @@ target_link_libraries(mcpi-recompiled PRIVATE mcpi_core)
 
 if(MCPI_BUILD_TESTS)
     enable_testing()
+    find_program(MCPI_PYTHON_EXECUTABLE NAMES python python3 REQUIRED)
 
     add_executable(mcpi_protocol_tests
         tests/protocol_tests.cpp
@@ -56,6 +58,23 @@ if(MCPI_BUILD_TESTS)
     )
     target_link_libraries(mcpi_api_server_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_api_dispatcher_tests
+        tests/api_dispatcher_tests.cpp
+    )
+    target_link_libraries(mcpi_api_dispatcher_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_python_api_host
+        tests/support/python_api_host.cpp
+    )
+    target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
+
     add_test(NAME protocol COMMAND mcpi_protocol_tests)
     add_test(NAME api_server COMMAND mcpi_api_server_tests)
+    add_test(NAME api_dispatcher COMMAND mcpi_api_dispatcher_tests)
+    add_test(
+        NAME python_api_smoke
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_smoke.py
+                $<TARGET_FILE:mcpi_python_api_host>
+    )
 endif()
