@@ -85,4 +85,10 @@ if(MCPI_BUILD_TESTS)
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_smoke.py
                 $<TARGET_FILE:mcpi_python_api_host>
     )
+    add_test(
+        NAME main_executable_smoke
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/main_executable_smoke.py
+                $<TARGET_FILE:mcpi-recompiled>
+    )
 endif()
