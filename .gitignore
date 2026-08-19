@@ -1,0 +1,30 @@
+# Build output
+/build/
+/out/
+/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+
+# IDEs
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Local reference material - never commit proprietary/original game files
+/reference/
+/original/
+assets-original/
+minecraft-pi
+minecraft-pi-*.tar.gz
+minecraft-pi-*.zip
+
+# Analysis tools
+*.ghidra
+*.rep
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
