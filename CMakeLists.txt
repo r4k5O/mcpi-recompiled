@@ -46,7 +46,7 @@ target_link_libraries(mcpi-recompiled PRIVATE mcpi_core)
 
 if(MCPI_BUILD_TESTS)
     enable_testing()
-    find_program(MCPI_PYTHON_EXECUTABLE NAMES python REQUIRED)
+    find_program(MCPI_PYTHON_EXECUTABLE NAMES python python3 REQUIRED)
 
     add_executable(mcpi_protocol_tests
         tests/protocol_tests.cpp
