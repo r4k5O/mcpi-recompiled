@@ -43,11 +43,43 @@ else()
     target_compile_options(mcpi_core PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+if(MCPI_BUILD_CLIENT)
+    include(FetchContent)
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC ON CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+    set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+    set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        sdl3
+        URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.14/SDL3-3.4.14.tar.gz
+        URL_HASH SHA256=30d4aa2b3037718142b32dffd4e72f917ebb6cc5227150e7bb9c45efb2153aeb
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(sdl3)
+
+    add_library(mcpi_client
+        src/client/ClientApp.cpp
+    )
+    target_link_libraries(mcpi_client PUBLIC mcpi_core SDL3::SDL3-static)
+    target_compile_definitions(mcpi_client PRIVATE SDL_MAIN_HANDLED)
+    if(MSVC)
+        target_compile_options(mcpi_client PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(mcpi_client PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endif()
+
 add_executable(mcpi-recompiled
     src/main.cpp
 )
 
 target_link_libraries(mcpi-recompiled PRIVATE mcpi_core)
+if(MCPI_BUILD_CLIENT)
+    target_link_libraries(mcpi-recompiled PRIVATE mcpi_client)
+    target_compile_definitions(mcpi-recompiled PRIVATE MCPI_BUILD_CLIENT=1 SDL_MAIN_HANDLED)
+endif()
 
 if(MCPI_BUILD_TESTS)
     enable_testing()
