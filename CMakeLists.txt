@@ -15,6 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Threads REQUIRED)
 
 add_library(mcpi_core
+    src/api/ApiDispatcher.cpp
     src/api/ApiServer.cpp
     src/api/Command.cpp
 )
