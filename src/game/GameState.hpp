@@ -3,6 +3,9 @@
 #include "game/GameApi.hpp"
 #include "world/World.hpp"
 
+#include <array>
+#include <cstdint>
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -18,11 +21,19 @@ public:
     static constexpr int world_max_y = 127;
     static constexpr int world_min_z = 0;
     static constexpr int world_max_z = 255;
+    static constexpr int hotbar_size = 9;
 
     GameState();
 
+    void new_world(std::uint32_t seed);
+    [[nodiscard]] bool save(const std::filesystem::path& path) const;
+    [[nodiscard]] bool load(const std::filesystem::path& path);
+    [[nodiscard]] std::uint32_t seed() const noexcept;
+    [[nodiscard]] bool generated_world() const noexcept;
+
     [[nodiscard]] Vec3 player_position() const override;
     void set_player_position(const Vec3& position) override;
+    void move_player(const Vec3& delta) noexcept;
     [[nodiscard]] IVec3 spawn_position() const override;
     void set_spawn_position(const IVec3& position) noexcept;
 
@@ -33,6 +44,14 @@ public:
                     int x2, int y2, int z2,
                     int block_type, int block_data) override;
     [[nodiscard]] int height_at(int x, int z) const override;
+
+    [[nodiscard]] int selected_hotbar_slot() const noexcept;
+    void select_hotbar_slot(int slot) noexcept;
+    [[nodiscard]] int hotbar_block(int slot) const noexcept;
+    void set_hotbar_block(int slot, int block_type) noexcept;
+    [[nodiscard]] int selected_block() const noexcept;
+    void place_selected_block(int x, int y, int z);
+    void break_block(int x, int y, int z);
 
     void save_checkpoint() override;
     void restore_checkpoint() override;
@@ -61,13 +80,22 @@ private:
     struct Checkpoint {
         world::World world;
         Vec3 player_position;
+        std::unordered_map<std::uint32_t, world::BlockState> changes;
     };
 
     [[nodiscard]] static bool inside_world(int x, int y, int z) noexcept;
+    [[nodiscard]] static std::uint32_t block_key(int x, int y, int z) noexcept;
+    [[nodiscard]] static world::BlockPos block_position(std::uint32_t key) noexcept;
+    void reset_hotbar() noexcept;
 
+    std::uint32_t seed_ = 0;
+    bool generated_world_ = false;
     IVec3 spawn_position_{128, 64, 128};
     Vec3 player_position_{128.0, 64.0, 128.0};
     world::World world_;
+    std::unordered_map<std::uint32_t, world::BlockState> changes_;
+    std::array<int, hotbar_size> hotbar_{};
+    int selected_hotbar_slot_ = 0;
     std::optional<Checkpoint> checkpoint_;
     std::unordered_map<std::string, bool> world_settings_;
     std::unordered_map<std::string, bool> player_settings_;
