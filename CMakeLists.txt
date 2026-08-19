@@ -19,6 +19,7 @@ add_library(mcpi_core
     src/api/ApiServer.cpp
     src/api/Command.cpp
     src/game/GameState.cpp
+    src/world/Chunk.cpp
     src/world/World.cpp
 )
 
