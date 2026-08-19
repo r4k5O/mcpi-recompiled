@@ -1,13 +1,30 @@
 #include "game/GameState.hpp"
 
+#include "world/WorldGenerator.hpp"
+
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <limits>
 
 namespace mcpi::game {
+namespace {
+
+constexpr const char* save_magic = "MCPI_RECOMPILED_WORLD";
+constexpr int save_version = 1;
+
+} // namespace
 
 GameState::GameState() {
     world_settings_.emplace("world_immutable", false);
     world_settings_.emplace("nametags_visible", true);
     player_settings_.emplace("autojump", true);
+    reset_hotbar();
+}
+
+void GameState::reset_hotbar() noexcept {
+    hotbar_ = {1, 3, 4, 5, 20, 45, 46, 57, 89};
+    selected_hotbar_slot_ = 0;
 }
 
 bool GameState::inside_world(int x, int y, int z) noexcept {
@@ -16,12 +33,159 @@ bool GameState::inside_world(int x, int y, int z) noexcept {
            z >= world_min_z && z <= world_max_z;
 }
 
+std::uint32_t GameState::block_key(int x, int y, int z) noexcept {
+    return static_cast<std::uint32_t>(x & 0xff) |
+           (static_cast<std::uint32_t>(z & 0xff) << 8U) |
+           (static_cast<std::uint32_t>(y & 0x7f) << 16U);
+}
+
+world::BlockPos GameState::block_position(std::uint32_t key) noexcept {
+    return {
+        static_cast<int>(key & 0xffU),
+        static_cast<int>((key >> 16U) & 0x7fU),
+        static_cast<int>((key >> 8U) & 0xffU),
+    };
+}
+
+void GameState::new_world(std::uint32_t seed) {
+    seed_ = seed;
+    generated_world_ = true;
+    world::WorldGenerator::generate(world_, seed_);
+    changes_.clear();
+    checkpoint_.reset();
+    reset_hotbar();
+    clear_events();
+    chat_messages_.clear();
+
+    spawn_position_ = {128, world_.height_at(128, 128), 128};
+    player_position_ = {
+        static_cast<double>(spawn_position_.x),
+        static_cast<double>(spawn_position_.y),
+        static_cast<double>(spawn_position_.z),
+    };
+    camera_position_ = player_position_;
+    camera_mode_ = CameraMode::Normal;
+}
+
+bool GameState::save(const std::filesystem::path& path) const {
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    if (!output) {
+        return false;
+    }
+
+    output << save_magic << ' ' << save_version << '\n';
+    output << "generated " << (generated_world_ ? 1 : 0) << '\n';
+    output << "seed " << seed_ << '\n';
+    output << "spawn " << spawn_position_.x << ' ' << spawn_position_.y << ' ' << spawn_position_.z << '\n';
+    output << std::setprecision(17);
+    output << "player " << player_position_.x << ' ' << player_position_.y << ' ' << player_position_.z << '\n';
+    output << "selected " << selected_hotbar_slot_ << '\n';
+    output << "hotbar";
+    for (int block : hotbar_) {
+        output << ' ' << block;
+    }
+    output << '\n';
+    output << "changes " << changes_.size() << '\n';
+    for (const auto& [key, block] : changes_) {
+        output << key << ' ' << block.id << ' ' << block.data << '\n';
+    }
+
+    return static_cast<bool>(output);
+}
+
+bool GameState::load(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return false;
+    }
+
+    std::string magic;
+    int version = 0;
+    if (!(input >> magic >> version) || magic != save_magic || version != save_version) {
+        return false;
+    }
+
+    std::string label;
+    int generated = 0;
+    std::uint32_t loaded_seed = 0;
+    IVec3 loaded_spawn{};
+    Vec3 loaded_player{};
+    int loaded_selected = 0;
+    std::array<int, hotbar_size> loaded_hotbar{};
+    std::size_t change_count = 0;
+
+    if (!(input >> label >> generated) || label != "generated") return false;
+    if (!(input >> label >> loaded_seed) || label != "seed") return false;
+    if (!(input >> label >> loaded_spawn.x >> loaded_spawn.y >> loaded_spawn.z) || label != "spawn") return false;
+    if (!(input >> label >> loaded_player.x >> loaded_player.y >> loaded_player.z) || label != "player") return false;
+    if (!(input >> label >> loaded_selected) || label != "selected") return false;
+    if (!(input >> label) || label != "hotbar") return false;
+    for (int& block : loaded_hotbar) {
+        if (!(input >> block)) return false;
+    }
+    if (!(input >> label >> change_count) || label != "changes") return false;
+    if (change_count > 8'388'608U) {
+        return false;
+    }
+
+    std::unordered_map<std::uint32_t, world::BlockState> loaded_changes;
+    loaded_changes.reserve(change_count);
+    for (std::size_t index = 0; index < change_count; ++index) {
+        std::uint32_t key = 0;
+        world::BlockState block;
+        if (!(input >> key >> block.id >> block.data)) {
+            return false;
+        }
+        loaded_changes.insert_or_assign(key, block);
+    }
+
+    if (generated != 0) {
+        new_world(loaded_seed);
+    } else {
+        seed_ = loaded_seed;
+        generated_world_ = false;
+        world_.clear();
+        changes_.clear();
+        checkpoint_.reset();
+    }
+
+    spawn_position_ = loaded_spawn;
+    player_position_ = loaded_player;
+    hotbar_ = loaded_hotbar;
+    selected_hotbar_slot_ = std::clamp(loaded_selected, 0, hotbar_size - 1);
+
+    changes_ = loaded_changes;
+    for (const auto& [key, block] : changes_) {
+        const auto position = block_position(key);
+        world_.set_block(position, block);
+    }
+
+    camera_position_ = player_position_;
+    return true;
+}
+
+std::uint32_t GameState::seed() const noexcept {
+    return seed_;
+}
+
+bool GameState::generated_world() const noexcept {
+    return generated_world_;
+}
+
 Vec3 GameState::player_position() const {
     return player_position_;
 }
 
 void GameState::set_player_position(const Vec3& position) {
     player_position_ = position;
+}
+
+void GameState::move_player(const Vec3& delta) noexcept {
+    constexpr double max_xz = 255.999;
+    constexpr double max_y = 127.999;
+    player_position_.x = std::clamp(player_position_.x + delta.x, 0.0, max_xz);
+    player_position_.y = std::clamp(player_position_.y + delta.y, 0.0, max_y);
+    player_position_.z = std::clamp(player_position_.z + delta.z, 0.0, max_xz);
 }
 
 IVec3 GameState::spawn_position() const {
@@ -44,7 +208,9 @@ void GameState::set_block(int x, int y, int z, int block_type, int block_data) {
     if (!inside_world(x, y, z)) {
         return;
     }
-    world_.set_block({x, y, z}, {block_type, block_data});
+    const world::BlockState block{block_type, block_data};
+    world_.set_block({x, y, z}, block);
+    changes_.insert_or_assign(block_key(x, y, z), block);
 }
 
 void GameState::set_blocks(int x1, int y1, int z1,
@@ -64,7 +230,7 @@ void GameState::set_blocks(int x1, int y1, int z1,
     for (int x = min_x; x <= max_x; ++x) {
         for (int z = min_z; z <= max_z; ++z) {
             for (int y = min_y; y <= max_y; ++y) {
-                world_.set_block({x, y, z}, {block_type, block_data});
+                set_block(x, y, z, block_type, block_data);
             }
         }
     }
@@ -77,8 +243,46 @@ int GameState::height_at(int x, int z) const {
     return world_.height_at(x, z);
 }
 
+int GameState::selected_hotbar_slot() const noexcept {
+    return selected_hotbar_slot_;
+}
+
+void GameState::select_hotbar_slot(int slot) noexcept {
+    if (slot >= 0 && slot < hotbar_size) {
+        selected_hotbar_slot_ = slot;
+    }
+}
+
+int GameState::hotbar_block(int slot) const noexcept {
+    return slot >= 0 && slot < hotbar_size ? hotbar_[static_cast<std::size_t>(slot)] : 0;
+}
+
+void GameState::set_hotbar_block(int slot, int block_type) noexcept {
+    if (slot >= 0 && slot < hotbar_size) {
+        hotbar_[static_cast<std::size_t>(slot)] = block_type;
+    }
+}
+
+int GameState::selected_block() const noexcept {
+    return hotbar_block(selected_hotbar_slot_);
+}
+
+void GameState::place_selected_block(int x, int y, int z) {
+    if (world_setting("world_immutable")) {
+        return;
+    }
+    set_block(x, y, z, selected_block(), 0);
+}
+
+void GameState::break_block(int x, int y, int z) {
+    if (world_setting("world_immutable")) {
+        return;
+    }
+    set_block(x, y, z, 0, 0);
+}
+
 void GameState::save_checkpoint() {
-    checkpoint_ = Checkpoint{world_, player_position_};
+    checkpoint_ = Checkpoint{world_, player_position_, changes_};
 }
 
 void GameState::restore_checkpoint() {
@@ -87,6 +291,7 @@ void GameState::restore_checkpoint() {
     }
     world_ = checkpoint_->world;
     player_position_ = checkpoint_->player_position;
+    changes_ = checkpoint_->changes;
 }
 
 void GameState::set_world_setting(const std::string& key, bool value) {
