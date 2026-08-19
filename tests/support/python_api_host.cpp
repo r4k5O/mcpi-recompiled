@@ -9,6 +9,10 @@
 
 int main() {
     mcpi::game::GameState game;
+    // This host is a transport/protocol smoke fixture, so keep its coordinate
+    // origin intentionally at zero. Spawn-relative behavior is covered by the
+    // dispatcher tests and the real main-executable tests.
+    game.set_spawn_position({0, 0, 0});
     game.set_player_position({1.5, 2.0, 3.25});
 
     mcpi::api::ApiDispatcher dispatcher(game);
