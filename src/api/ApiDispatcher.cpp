@@ -331,11 +331,12 @@ std::optional<std::string> ApiDispatcher::dispatch(const Command& command) const
     }
     if (command.name == "entity.getTile" && command.arguments.size() == 1U) {
         const auto exact = game_.player_position();
-        return format_ivec3(outgoing({
+        const game::IVec3 tile{
             static_cast<int>(std::floor(exact.x)),
             static_cast<int>(std::floor(exact.y)),
             static_cast<int>(std::floor(exact.z)),
-        }, spawn));
+        };
+        return format_ivec3(outgoing(tile, spawn));
     }
     if (command.name == "entity.setPos" && command.arguments.size() == 4U) {
         game::Vec3 position;
