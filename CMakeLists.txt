@@ -104,6 +104,9 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_world_lifecycle_tests tests/world_lifecycle_tests.cpp)
     target_link_libraries(mcpi_world_lifecycle_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_phase1_acceptance_tests tests/phase1_acceptance_tests.cpp)
+    target_link_libraries(mcpi_phase1_acceptance_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
 
@@ -129,6 +132,7 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME world_backend COMMAND mcpi_world_backend_tests)
     add_test(NAME chunk_storage COMMAND mcpi_chunk_storage_tests)
     add_test(NAME world_lifecycle COMMAND mcpi_world_lifecycle_tests)
+    add_test(NAME phase1_acceptance COMMAND mcpi_phase1_acceptance_tests)
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
