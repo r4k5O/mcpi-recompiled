@@ -148,6 +148,13 @@ if(MCPI_BUILD_TESTS)
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-basic.ref
     )
     add_test(
+        NAME parity_cli
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity_cli_tests.py
+                ${CMAKE_CURRENT_BINARY_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-basic.ref
+    )
+    add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_smoke.py
