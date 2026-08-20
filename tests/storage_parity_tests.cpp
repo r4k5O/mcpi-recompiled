@@ -144,17 +144,25 @@ int main() {
     assert(legacy_loaded.block_type(20, 70, 20) == 57);
     assert(legacy_loaded.block_data(20, 70, 20) == 6);
 
-    stage("router-pi-sniff");
+    stage("router-pi-save");
     assert(mcpi::storage::save_world(source, pi_path));
+    stage("router-pi-copy");
     std::filesystem::copy_file(
         pi_path,
         renamed_pi_path,
         std::filesystem::copy_options::overwrite_existing);
-    assert(mcpi::storage::detect_storage_format(renamed_pi_path) ==
-           StorageFormat::PiLevelDat);
+    stage("router-pi-detect");
+    const auto detected = mcpi::storage::detect_storage_format(renamed_pi_path);
+    std::cerr << "[storage_parity] detected=" << static_cast<int>(detected) << std::endl;
+    assert(detected == StorageFormat::PiLevelDat);
+    stage("router-pi-load");
     GameState sniffed_loaded;
-    assert(mcpi::storage::load_world(sniffed_loaded, renamed_pi_path));
+    const bool sniffed_ok = mcpi::storage::load_world(sniffed_loaded, renamed_pi_path);
+    std::cerr << "[storage_parity] load=" << (sniffed_ok ? 1 : 0) << std::endl;
+    assert(sniffed_ok);
+    stage("router-pi-seed");
     assert(sniffed_loaded.seed() == source.seed());
+    stage("router-pi-spawn");
     assert(sniffed_loaded.spawn_position() == source.spawn_position());
 
     stage("cleanup");
