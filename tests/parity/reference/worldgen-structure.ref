@@ -1,0 +1,20 @@
+# Safe structural observations derived from the supplied MCPI 0.1.1 binary.
+# These are facts/fingerprints, not copied proprietary data blobs.
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=levelchunk-block-storage
+input=LevelChunk block-ID dimensions
+expected=16x128x16;32768-bytes;index=(x<<11)|(z<<7)|y
+---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=randomlevelsource-cache-miss-allocations
+input=RandomLevelSource candidate 0x000b46fc cache miss
+expected=block-buffer=32768;levelchunk-allocation=720
+---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=randomlevelsource-chunk-coordinate-mix
+input=RandomLevelSource candidate 0x000b46fc chunk-dependent pre-RNG value
+expected=0x07ebe2d5*chunkZ+0x14609048*chunkX
+---
