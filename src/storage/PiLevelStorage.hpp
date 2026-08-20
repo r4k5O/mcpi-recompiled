@@ -2,6 +2,9 @@
 
 #include "storage/LevelStorage.hpp"
 
+#include <cstddef>
+#include <cstdint>
+
 namespace mcpi::storage {
 
 class PiLevelStorage final : public LevelStorage {
