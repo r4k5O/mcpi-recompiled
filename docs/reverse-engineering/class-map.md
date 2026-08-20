@@ -35,6 +35,8 @@ A function at `0x000b46fc` is a **strong inference** candidate for the `RandomLe
 6. it calls terrain-generation candidates at `0x000b3b54` and `0x000b32ec` using the same chunk coordinates/block buffer;
 7. it finally invokes a `LevelChunk` virtual through vtable offset `0x10` before returning the chunk pointer.
 
+The observed coordinate component in step 3 is now represented independently in `RandomLevelSource::observed_chunk_coordinate_mix()` and covered by exact 32-bit wraparound vectors in `worldgen_parity`. It is intentionally **not** wired into the placeholder Phase-1 terrain profile as though the missing world-seed expansion/noise sequence were known.
+
 The `RandomLevelSource` constructor candidate at `0x000b4424` writes vptr `0x00110598` and initializes several large RNG/noise-like subobjects. The exact seed expansion, noise algorithms, and semantic names of `0x000b3b54` / `0x000b32ec` remain **open** until traced further.
 
 Strong inference still to prove through call tracing and reference vectors:
