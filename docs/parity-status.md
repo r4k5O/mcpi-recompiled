@@ -13,7 +13,7 @@ No row is promoted to `matched` without a concrete evidence path and acceptance-
 
 | # | Subsystem | Status | Evidence | Acceptance test |
 |---:|---|---|---|---|
-| 1 | Original world generation / `RandomLevelSource` | partial | `src/world/WorldGenerator.cpp`; `docs/reverse-engineering/mcpi-0.1.1-initial-map.md` | `worldgen_parity` (planned) |
+| 1 | Original world generation / `RandomLevelSource` | partial | `src/world/RandomLevelSource.*`; `tests/parity/reference/worldgen-structure.ref`; `docs/reverse-engineering/class-map.md` | `worldgen_parity` (boundary/determinism; original terrain still partial) |
 | 2 | Lighting propagation | confirmed | `docs/reverse-engineering/levelchunk-layout.md` identifies packed light layers and defaults | `lighting_parity` (planned) |
 | 3 | Original block behavior | partial | Phase-1 block set/get/data path plus protocol block IDs | `block_behavior` (planned) |
 | 4 | Original world save format | confirmed | storage/LevelData/NBT anchors and spawn-field evidence in RE notes | `storage_parity` (planned) |
@@ -30,8 +30,8 @@ No row is promoted to `matched` without a concrete evidence path and acceptance-
 | 15 | Java API completeness | partial | independent `clients/java/src/pi` surface + Java 25 smoke test | `java_api_surface` (planned) |
 | 16 | Python API completeness | partial | real `mcpi==1.2.1` smoke test | `python_api_compatibility` (planned) |
 | 17 | Original game loop/tick ordering | confirmed | startup/app callgraph anchors exist; exact update order/timing remains incomplete | `game_loop` (planned) |
-| 18 | Reverse-engineering class map | partial | existing initial map, LevelChunk and translator notes | `reverse_engineering_docs` (planned) |
-| 19 | Differential original-vs-recompile harness | partial | `src/parity/ReferenceCase.*` + `parity_framework` contract | `parity_framework` |
+| 18 | Reverse-engineering class map | partial | `docs/reverse-engineering/anchor-index.tsv`; `class-map.md`; LevelChunk and translator notes | `reverse_engineering_docs` |
+| 19 | Differential original-vs-recompile harness | partial | `src/parity/ReferenceCase.*`; `ReferenceSuite.*`; `mcpi-parity` | `parity_framework` + `parity_reference` + `parity_cli` |
 | 20 | Platform coverage | partial | Linux x86-64 + Windows x86-64 CI/release are established | `platform_contract` (planned) |
 
 ## Promotion rule
