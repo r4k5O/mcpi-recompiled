@@ -23,6 +23,17 @@ void stage(const char* name) {
     std::cerr << "[storage_parity] " << name << std::endl;
 }
 
+bool copy_binary_file(const std::filesystem::path& source,
+                      const std::filesystem::path& destination) {
+    std::ifstream input(source, std::ios::binary);
+    std::ofstream output(destination, std::ios::binary | std::ios::trunc);
+    if (!input || !output) {
+        return false;
+    }
+    output << input.rdbuf();
+    return static_cast<bool>(input) && static_cast<bool>(output);
+}
+
 } // namespace
 
 int main() {
@@ -147,10 +158,7 @@ int main() {
     stage("router-pi-save");
     assert(mcpi::storage::save_world(source, pi_path));
     stage("router-pi-copy");
-    std::filesystem::copy_file(
-        pi_path,
-        renamed_pi_path,
-        std::filesystem::copy_options::overwrite_existing);
+    assert(copy_binary_file(pi_path, renamed_pi_path));
     stage("router-pi-detect");
     const auto detected = mcpi::storage::detect_storage_format(renamed_pi_path);
     std::cerr << "[storage_parity] detected=" << static_cast<int>(detected) << std::endl;
