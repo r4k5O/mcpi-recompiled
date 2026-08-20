@@ -1,11 +1,11 @@
 #pragma once
 
 #include "game/GameApi.hpp"
+#include "game/Inventory.hpp"
 #include "world/BlockBehavior.hpp"
 #include "world/LightEngine.hpp"
 #include "world/World.hpp"
 
-#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -23,7 +23,7 @@ public:
     static constexpr int world_max_y = 127;
     static constexpr int world_min_z = 0;
     static constexpr int world_max_z = 255;
-    static constexpr int hotbar_size = 9;
+    static constexpr int hotbar_size = Inventory::hotbar_size;
 
     GameState();
 
@@ -47,6 +47,8 @@ public:
                     int block_type, int block_data) override;
     [[nodiscard]] int height_at(int x, int z) const override;
 
+    [[nodiscard]] Inventory& inventory() noexcept;
+    [[nodiscard]] const Inventory& inventory() const noexcept;
     [[nodiscard]] int selected_hotbar_slot() const noexcept;
     void select_hotbar_slot(int slot) noexcept;
     [[nodiscard]] int hotbar_block(int slot) const noexcept;
@@ -98,8 +100,7 @@ private:
     world::LightEngine light_engine_;
     world::BlockUpdateEngine block_updates_;
     std::unordered_map<std::uint32_t, world::BlockState> changes_;
-    std::array<int, hotbar_size> hotbar_{};
-    int selected_hotbar_slot_ = 0;
+    Inventory inventory_;
     std::optional<Checkpoint> checkpoint_;
     std::unordered_map<std::string, bool> world_settings_;
     std::unordered_map<std::string, bool> player_settings_;
