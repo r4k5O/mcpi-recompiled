@@ -68,7 +68,7 @@ This repository does **not** redistribute Mojang/Microsoft textures, sounds or p
 ./mcpi-recompiled --assets /path/to/your/minecraft-pi/assets
 ```
 
-The loader only reads local files, rejects path traversal, never downloads assets, and falls back to project-owned/procedural data when an optional asset is unavailable. `MCPI_ASSETS` can also name a local asset root. Supplying original assets does not make unresolved renderer/audio behavior automatically `matched`.
+If the original archive is unpacked as a directory named `mcpi` in the current working directory, the loader detects `./mcpi` automatically. The loader only reads local files, rejects path traversal, never downloads assets, and falls back to project-owned/procedural data when an optional asset is unavailable. `MCPI_ASSETS` can also name a local asset root. Supplying original assets does not make unresolved renderer/audio behavior automatically `matched`.
 
 ## Releases
 
