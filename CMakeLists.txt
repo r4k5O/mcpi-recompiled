@@ -21,7 +21,9 @@ add_library(mcpi_core
     src/api/Command.cpp
     src/game/Entity.cpp
     src/game/EntityRegistry.cpp
+    src/game/GameLoop.cpp
     src/game/GameState.cpp
+    src/game/GameStateLoop.cpp
     src/game/Inventory.cpp
     src/game/Physics.cpp
     src/game/Player.cpp
