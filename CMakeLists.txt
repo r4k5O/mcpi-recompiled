@@ -171,6 +171,9 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_network_parity_tests tests/network_parity_tests.cpp)
     target_link_libraries(mcpi_network_parity_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_api_transcript_parity_tests tests/api_transcript_parity_tests.cpp)
+    target_link_libraries(mcpi_api_transcript_parity_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
 
@@ -220,6 +223,11 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME entity_system COMMAND mcpi_entity_system_tests)
     add_test(NAME game_loop COMMAND mcpi_game_loop_tests)
     add_test(NAME network_parity COMMAND mcpi_network_parity_tests)
+    add_test(
+        NAME api_transcript_parity
+        COMMAND mcpi_api_transcript_parity_tests
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-transcripts.ref
+    )
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
