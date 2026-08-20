@@ -80,8 +80,10 @@ public:
 
     void set_camera_mode(CameraMode mode) override;
     void set_camera_position(const Vec3& position) override;
-    [[nodiscard]] CameraMode camera_mode() const noexcept;
-    [[nodiscard]] Vec3 camera_position() const noexcept;
+    [[nodiscard]] CameraMode camera_mode() const noexcept override;
+    [[nodiscard]] Vec3 camera_position() const noexcept override;
+    void set_camera_target_entity(int id) override { camera_target_entity_id_ = id; }
+    [[nodiscard]] int camera_target_entity() const noexcept override { return camera_target_entity_id_; }
 
     [[nodiscard]] std::vector<BlockHit> poll_block_hits() override;
     void clear_events() override;
@@ -119,6 +121,7 @@ private:
     std::unordered_map<std::string, bool> player_settings_;
     CameraMode camera_mode_ = CameraMode::Normal;
     Vec3 camera_position_{128.0, 64.0, 128.0};
+    int camera_target_entity_id_ = 0;
     std::vector<BlockHit> block_hits_;
     std::vector<std::string> chat_messages_;
 };
