@@ -69,11 +69,17 @@ if(MCPI_BUILD_CLIENT)
     set(SDL_TESTS OFF CACHE BOOL "" FORCE)
     set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+
+    set(MCPI_SDL_FETCH_TIMESTAMP_ARGS)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+        list(APPEND MCPI_SDL_FETCH_TIMESTAMP_ARGS DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+    endif()
+
     FetchContent_Declare(
         sdl3
         URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.14/SDL3-3.4.14.tar.gz
         URL_HASH SHA256=30d4aa2b3037718142b32dffd4e72f917ebb6cc5227150e7bb9c45efb2153aeb
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        ${MCPI_SDL_FETCH_TIMESTAMP_ARGS}
     )
     FetchContent_MakeAvailable(sdl3)
 
