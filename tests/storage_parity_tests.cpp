@@ -1,6 +1,7 @@
 #include "game/GameState.hpp"
 #include "storage/Nbt.hpp"
 #include "storage/PiLevelStorage.hpp"
+#include "storage/StorageRouter.hpp"
 
 #include <array>
 #include <cassert>
@@ -22,6 +23,7 @@ bool close(double a, double b) {
 int main() {
     using mcpi::game::GameState;
     using mcpi::storage::PiLevelStorage;
+    using mcpi::storage::StorageFormat;
     using namespace mcpi::storage::nbt;
 
     // Little-endian NBT round-trip for the primitive/container families needed
@@ -71,10 +73,10 @@ int main() {
     assert(!read_named(truncated, rejected_name, rejected, Endian::Little));
 
     const std::array<unsigned char, 8> hostile_list{{
-        0x09,       // TAG_List
-        0x00, 0x00, // empty name, little-endian length
-        0x03,       // list element type TAG_Int
-        0xff, 0xff, 0xff, 0x7f // absurd positive length
+        0x09,
+        0x00, 0x00,
+        0x03,
+        0xff, 0xff, 0xff, 0x7f
     }};
     const std::string hostile_bytes(
         reinterpret_cast<const char*>(hostile_list.data()), hostile_list.size());
@@ -88,8 +90,8 @@ int main() {
     source.set_spawn_position({12, 70, 34});
     source.set_player_position({11.25, 72.5, 33.75});
 
-    const auto path = std::filesystem::temp_directory_path() /
-                      "mcpi-recompiled-storage-parity-level.dat";
+    const auto temp = std::filesystem::temp_directory_path();
+    const auto path = temp / "mcpi-recompiled-storage-parity-level.dat";
     std::filesystem::remove(path);
 
     PiLevelStorage storage;
@@ -119,6 +121,43 @@ int main() {
     assert(close(loaded.player_position().y, source.player_position().y));
     assert(close(loaded.player_position().z, source.player_position().z));
 
+    // Routing must retain Phase-1 legacy saves while selecting Pi storage for
+    // level.dat. Existing files are sniffed so renaming a file does not corrupt
+    // it by silently choosing the wrong reader.
+    assert(mcpi::storage::storage_format_for_path("world.mcpiworld") ==
+           StorageFormat::Legacy);
+    assert(mcpi::storage::storage_format_for_path("level.dat") ==
+           StorageFormat::PiLevelDat);
+
+    const auto legacy_path = temp / "mcpi-recompiled-storage-router.mcpiworld";
+    const auto pi_path = temp / "mcpi-recompiled-storage-router.dat";
+    const auto renamed_pi_path = temp / "mcpi-recompiled-storage-router.bin";
+    std::filesystem::remove(legacy_path);
+    std::filesystem::remove(pi_path);
+    std::filesystem::remove(renamed_pi_path);
+
+    source.set_block(20, 70, 20, 57, 6);
+    assert(mcpi::storage::save_world(source, legacy_path));
+    GameState legacy_loaded;
+    assert(mcpi::storage::load_world(legacy_loaded, legacy_path));
+    assert(legacy_loaded.block_type(20, 70, 20) == 57);
+    assert(legacy_loaded.block_data(20, 70, 20) == 6);
+
+    assert(mcpi::storage::save_world(source, pi_path));
+    std::filesystem::copy_file(
+        pi_path,
+        renamed_pi_path,
+        std::filesystem::copy_options::overwrite_existing);
+    assert(mcpi::storage::detect_storage_format(renamed_pi_path) ==
+           StorageFormat::PiLevelDat);
+    GameState sniffed_loaded;
+    assert(mcpi::storage::load_world(sniffed_loaded, renamed_pi_path));
+    assert(sniffed_loaded.seed() == source.seed());
+    assert(sniffed_loaded.spawn_position() == source.spawn_position());
+
     std::filesystem::remove(path);
+    std::filesystem::remove(legacy_path);
+    std::filesystem::remove(pi_path);
+    std::filesystem::remove(renamed_pi_path);
     return 0;
 }
