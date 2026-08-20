@@ -1,3 +1,5 @@
+#include "api/ApiDispatcher.hpp"
+#include "api/Command.hpp"
 #include "client/Camera.hpp"
 #include "game/GameState.hpp"
 
@@ -11,6 +13,8 @@ bool near(double a, double b, double epsilon = 1.0e-6) {
 }
 
 int main() {
+    using mcpi::api::ApiDispatcher;
+    using mcpi::api::Command;
     using mcpi::client::CameraController;
     using mcpi::game::CameraMode;
     using mcpi::game::GameState;
@@ -48,6 +52,19 @@ int main() {
     game.set_camera_mode(CameraMode::Normal);
     pose = CameraController::resolve(game, 0.0, 0.0);
     assert(near(pose.position.x, game.player_position().x));
+
+    // The optional entity argument on the MCPI camera commands must not be
+    // silently ignored: it selects the entity the camera follows.
+    ApiDispatcher dispatcher(game);
+    game.set_camera_target_entity(999);
+    (void)dispatcher.dispatch(Command{"camera.mode.setThirdPerson", {"0"}});
+    assert(game.camera_mode() == CameraMode::ThirdPerson);
+    assert(game.camera_target_entity() == 0);
+
+    game.set_camera_target_entity(999);
+    (void)dispatcher.dispatch(Command{"camera.mode.setNormal", {"0"}});
+    assert(game.camera_mode() == CameraMode::Normal);
+    assert(game.camera_target_entity() == 0);
 
     return 0;
 }
