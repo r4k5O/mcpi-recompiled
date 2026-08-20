@@ -335,7 +335,7 @@ int ClientApp::run() {
     {
         std::scoped_lock lock(game_mutex_);
         if (std::filesystem::exists(options_.world_path)) {
-            game_.load(options_.world_path);
+            (void)game_.load(options_.world_path);
         }
     }
 
@@ -384,7 +384,7 @@ int ClientApp::run() {
                         {
                             std::scoped_lock lock(game_mutex_);
                             if (game_.generated_world()) {
-                                game_.save(options_.world_path);
+                                (void)game_.save(options_.world_path);
                             }
                         }
                         set_playing(false);
@@ -399,7 +399,7 @@ int ClientApp::run() {
                         {
                             std::scoped_lock lock(game_mutex_);
                             game_.new_world(options_.seed.value_or(default_seed()));
-                            game_.save(options_.world_path);
+                            (void)game_.save(options_.world_path);
                         }
                         set_playing(true);
                     } else if (key == SDL_SCANCODE_L) {
@@ -429,10 +429,10 @@ int ClientApp::run() {
                     game_.select_hotbar_slot(static_cast<int>(key - SDL_SCANCODE_1));
                 } else if (key == SDL_SCANCODE_F5) {
                     std::scoped_lock lock(game_mutex_);
-                    game_.save(options_.world_path);
+                    (void)game_.save(options_.world_path);
                 } else if (key == SDL_SCANCODE_F9) {
                     std::scoped_lock lock(game_mutex_);
-                    game_.load(options_.world_path);
+                    (void)game_.load(options_.world_path);
                 }
             }
 
@@ -499,7 +499,7 @@ int ClientApp::run() {
     {
         std::scoped_lock lock(game_mutex_);
         if (game_.generated_world()) {
-            game_.save(options_.world_path);
+            (void)game_.save(options_.world_path);
         }
     }
 
