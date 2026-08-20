@@ -15,7 +15,7 @@ No row is promoted to `matched` without a concrete evidence path and acceptance-
 |---:|---|---|---|---|
 | 1 | Original world generation / `RandomLevelSource` | partial | `src/world/RandomLevelSource.*`; `tests/parity/reference/worldgen-structure.ref`; `docs/reverse-engineering/class-map.md` | `worldgen_parity` (boundary/determinism; original terrain still partial) |
 | 2 | Lighting propagation | partial | `src/world/LightEngine.*`; `docs/reverse-engineering/levelchunk-layout.md` identifies packed sky/block-light layers and defaults | `lighting_parity` (skylight column/shadow, source attenuation/removal, cross-chunk blocklight; exact original tables/lateral skylight still partial) |
-| 3 | Original block behavior | partial | Phase-1 block set/get/data path plus protocol block IDs | `block_behavior` (planned) |
+| 3 | Original block behavior | partial | `src/world/BlockBehavior.*`; GameState routes block writes through update/light hooks; protocol block IDs and confirmed light behavior | `block_behavior` + `lighting_parity` (registry/update contract reconstructed; exact original per-block tables/tick rules still partial) |
 | 4 | Original world save format | confirmed | storage/LevelData/NBT anchors and spawn-field evidence in RE notes | `storage_parity` (planned) |
 | 5 | Player physics | partial | Phase-1 movement exists but is direct-position movement | `player_physics` (planned) |
 | 6 | Inventory/hotbar/items | partial | Phase-1 9-slot block hotbar in `src/game/GameState.hpp` | `inventory` (planned) |
