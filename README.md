@@ -81,7 +81,21 @@ cmake --build build --config Release --parallel
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, and the built main executable.
+Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and the GitHub Release workflow contract.
+
+## Releases
+
+GitHub Releases are produced automatically from version tags matching `v*` once the release workflow is present on the default branch.
+
+For each version tag the release pipeline:
+
+1. builds the native client on **Linux x86-64** and **Windows x86-64**;
+2. runs the full CTest compatibility suite on both platforms;
+3. packages `mcpi-recompiled-<tag>-linux-x86_64.tar.gz` and `mcpi-recompiled-<tag>-windows-x86_64.zip`;
+4. generates `SHA256SUMS.txt` covering both archives;
+5. publishes a GitHub Release with generated release notes only after both platform jobs succeed.
+
+The intended first stable tag is **`v0.1.0`**, representing the Phase-1 functional compatibility baseline. It is also the recommended branch/fork point for work that intentionally modernizes gameplay separately from the original-parity reconstruction line.
 
 ## Reconstruction approach
 
