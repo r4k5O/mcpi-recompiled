@@ -16,8 +16,8 @@ struct Budget {
     std::size_t elements = 0U;
 
     bool charge(std::size_t count) noexcept {
-        if (count > limits.max_container_elements -
-                        std::min(elements, limits.max_container_elements)) {
+        if (elements > limits.max_container_elements ||
+            count > limits.max_container_elements - elements) {
             return false;
         }
         elements += count;
