@@ -99,6 +99,7 @@ std::optional<std::filesystem::path> OriginalPiAssetSource::locate(
     }
 
     const std::filesystem::path candidates[] = {
+        std::filesystem::current_path() / "mcpi",
         std::filesystem::current_path() / "minecraft-pi",
         std::filesystem::current_path() / "assets",
         "/opt/minecraft-pi",
