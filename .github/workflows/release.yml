@@ -212,8 +212,9 @@ jobs:
           package="mcpi-recompiled-${RELEASE_TAG}-${{ matrix.package_suffix }}"
           mkdir -p "dist/${package}"
           cp build/mcpi-recompiled "dist/${package}/mcpi-recompiled"
-          cp README.md LICENSE NOTICE LEGAL.md "dist/${package}/"
+          cp README.md LICENSE NOTICE LEGAL.md setup.sh "dist/${package}/"
           chmod +x "dist/${package}/mcpi-recompiled"
+          chmod +x "dist/${package}/setup.sh"
           tar -C dist -czf "dist/${package}.tar.gz" "${package}"
           rm -rf "dist/${package}"
 
@@ -335,8 +336,9 @@ jobs:
           package="mcpi-recompiled-${RELEASE_TAG}-${{ matrix.package_suffix }}"
           mkdir -p "dist/${package}"
           cp build-arm/mcpi-recompiled "dist/${package}/mcpi-recompiled"
-          cp README.md LICENSE NOTICE LEGAL.md "dist/${package}/"
+          cp README.md LICENSE NOTICE LEGAL.md setup.sh "dist/${package}/"
           chmod +x "dist/${package}/mcpi-recompiled"
+          chmod +x "dist/${package}/setup.sh"
           tar -C dist -czf "dist/${package}.tar.gz" "${package}"
           rm -rf "dist/${package}"
 
