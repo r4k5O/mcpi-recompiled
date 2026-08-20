@@ -20,6 +20,7 @@ add_library(mcpi_core
     src/api/ApiServer.cpp
     src/api/Command.cpp
     src/game/Entity.cpp
+    src/game/EntityRegistry.cpp
     src/game/GameState.cpp
     src/game/Inventory.cpp
     src/game/Physics.cpp
