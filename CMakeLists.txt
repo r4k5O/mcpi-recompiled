@@ -188,7 +188,11 @@ if(MCPI_BUILD_TESTS)
                 -d ${MCPI_JAVA_CLASSES_DIR}
                 ${MCPI_JAVA_SOURCES}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
-        SOURCES ${MCPI_JAVA_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/OriginalApiSurfaceSmoke.java
+        SOURCES
+                ${MCPI_JAVA_SOURCES}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/OriginalApiSurfaceSmoke.java
         COMMENT "Compiling Minecraft Pi Java compatibility client"
         VERBATIM
     )
