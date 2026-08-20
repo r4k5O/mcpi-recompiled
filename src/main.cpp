@@ -57,11 +57,12 @@ bool parse_seed(std::string_view text, std::uint32_t& seed) {
 void print_usage(const char* executable) {
     std::cout
         << "Usage: " << executable << " [options]\n"
-        << "  --port <0-65535>     MCPI API port (default: 4711)\n"
-        << "  --headless           Run API/world runtime without a window\n"
-        << "  --world <path>       World save path (default: world.mcpiworld; .dat uses Pi level.dat metadata)\n"
+        << "  --port <0-65535>      MCPI API port (default: 4711)\n"
+        << "  --headless            Run API/world runtime without a window\n"
+        << "  --world <path>        World save path (default: world.mcpiworld; .dat uses Pi level.dat metadata)\n"
         << "  --seed <0-4294967295> Seed used when creating a new world\n"
-        << "  --help, -h           Show this help\n";
+        << "  --assets <path>       Local Minecraft Pi asset directory (never downloaded)\n"
+        << "  --help, -h            Show this help\n";
 }
 
 } // namespace
@@ -75,6 +76,7 @@ int main(int argc, char** argv) {
 #endif
     std::filesystem::path world_path = "world.mcpiworld";
     std::optional<std::uint32_t> seed;
+    std::optional<std::filesystem::path> asset_path;
 
     for (int index = 1; index < argc; ++index) {
         const std::string_view argument(argv[index]);
@@ -116,6 +118,15 @@ int main(int argc, char** argv) {
             }
             seed = parsed_seed;
             ++index;
+            continue;
+        }
+
+        if (argument == "--assets") {
+            if (index + 1 >= argc) {
+                std::cerr << "Missing --assets path.\n";
+                return 2;
+            }
+            asset_path = std::filesystem::path(argv[++index]);
             continue;
         }
 
@@ -161,11 +172,13 @@ int main(int argc, char** argv) {
         mcpi::client::ClientApp app(
             game,
             game_mutex,
-            mcpi::client::ClientOptions{world_path, seed});
+            mcpi::client::ClientOptions{world_path, seed, asset_path});
         const int result = app.run();
         server.stop();
         return result;
     }
+#else
+    (void)asset_path;
 #endif
 
     while (keep_running != 0) {

@@ -1,0 +1,9 @@
+# Reconstructed camera transform metadata.
+# This file contains project-owned test parameters, not original image assets
+# or a claim that undocumented constants have been proven original.
+normal.eye_height=1.62
+third_person.distance=4.0
+third_person.collision_step=0.1
+third_person.clearance=0.2
+fixed.position_source=mcpi_camera_setPos
+fallback.invalid_target=local_player

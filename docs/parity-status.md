@@ -9,7 +9,7 @@ Statuses are evidence claims, not progress vibes:
 - `partial` — a working reconstruction exists, but known parity gaps remain;
 - `matched` — the acceptance test/reference comparison for the tracked claim passes.
 
-No row is promoted to `matched` without a concrete evidence path and acceptance-test name.
+No row is promoted to `matched` without a concrete evidence path and acceptance-test name. A project test can prove that our reconstruction is internally coherent without proving undocumented original behavior.
 
 | # | Subsystem | Status | Evidence | Acceptance test |
 |---:|---|---|---|---|
@@ -20,20 +20,20 @@ No row is promoted to `matched` without a concrete evidence path and acceptance-
 | 5 | Player physics | partial | `src/game/Entity.*`, `Player.*`, `Physics.*`; `GameState` delegates movement/position to the authoritative Player | `player_physics` + `game_state_player` (AABB collision, finite bounds, deterministic gravity/jump behavior; exact original movement constants/traces remain partial) |
 | 6 | Inventory/hotbar/items | partial | `src/game/Inventory.*`; Player owns the single authoritative Inventory; legacy save v1 migration + v2 stack/data persistence | `inventory` + `game_state_player` (9-slot stack/data/selection contract; exact original Pi inventory persistence fields remain partial) |
 | 7 | Entity system | partial | `src/game/EntityRegistry.*`; local Player is registered as stable entity ID 0; dispatcher performs real ID lookup instead of aliasing arbitrary IDs | `entity_system` (stable IDs, duplicate/missing-ID handling, player-ID visibility and poll/clear hit-event contract; broader original entity simulation/AI remains partial) |
-| 8 | Networking/multiplayer | unknown | network-handler/packet ancestry is known but Pi reachability is not yet established | `network_parity` (planned) |
-| 9 | Minecraft voxel renderer | partial | SDL3 Phase-1 renderer is runnable but intentionally simplified | `chunk_mesh` + reference-scene checks (planned) |
-| 10 | Original asset loader | unknown | repository intentionally ships no Mojang assets | `asset_source` (planned) |
-| 11 | Audio | unknown | original dependency includes SDL audio paths; reconstructed sound layer absent | `ui_audio` (planned) |
-| 12 | Original UI | partial | Phase-1 minimal menu/HUD exists; original layout parity not claimed | `ui_audio` + layout references (planned) |
-| 13 | Camera API integration | partial | camera state exists in GameState/API but is not authoritative in renderer | `camera` (planned) |
-| 14 | MCPI API bug-for-bug behavior | partial | `docs/reverse-engineering/api-coordinate-translation.md`; existing dispatcher tests | `api_transcript_parity` (planned) |
-| 15 | Java API completeness | partial | independent `clients/java/src/pi` surface + Java 25 smoke test | `java_api_surface` (planned) |
-| 16 | Python API completeness | partial | real `mcpi==1.2.1` smoke test | `python_api_compatibility` (planned) |
-| 17 | Original game loop/tick ordering | confirmed | startup/app callgraph anchors exist; exact update order/timing remains incomplete | `game_loop` (planned) |
+| 8 | Networking/multiplayer | unknown | `src/network/Packet.*`; `src/network/NetworkHandler.*`; protocol ancestry is reconstructed, but Pi multiplayer reachability remains unestablished | `network_parity` (packet framing/dispatch contract only; original multiplayer reachability remains unknown) |
+| 9 | Minecraft voxel renderer | partial | `src/client/ChunkMesh.*`; `src/client/LevelRenderer.*`; project-owned procedural texture fallback; software depth buffer | `chunk_mesh` + `phase2_parity_acceptance` (visible faces, shared-face culling, opaque/translucent split, metadata UV selection, light propagation; pixel parity remains unverified) |
+| 10 | Original asset loader | partial | `src/assets/AssetSource.hpp`; `OriginalPiAssetSource.*`; `FallbackAssetSource.*`; repository ships no Mojang assets | `asset_source` (local reads, traversal rejection, missing-file fallback; exact original asset lookup hierarchy remains partial) |
+| 11 | Audio | partial | `src/client/SoundEngine.*`; `SdlAudioMixer.*`; local WAV lookup with silence fallback and distance attenuation | `ui_audio` (event lookup failure is nonfatal and attenuation math is deterministic; original sound event table/mix remains unverified) |
+| 12 | Original UI | partial | `src/client/Screen.*`; `HudRenderer.*`; reference coordinate system fixed at 848×480 | `ui_audio` (title/game/pause transitions, hotbar/crosshair anchors and chat lifetime; visual/pixel parity remains partial) |
+| 13 | Camera API integration | partial | `src/client/Camera.*`; `GameState` camera mode/position/target state; renderer and raycast consume resolved camera pose | `camera` + `phase2_parity_acceptance` (normal/third-person/fixed, collision shortening and invalid-target fallback; exact original transform constants remain partial) |
+| 14 | MCPI API bug-for-bug behavior | partial | `tests/parity/reference/api-transcripts.ref`; `docs/reverse-engineering/api-coordinate-translation.md`; explicit `CommandResult` response classes | `api_transcript_parity` (tracked transcript cases pass; exhaustive undocumented bugs remain partial) |
+| 15 | Java API completeness | partial | independently written `clients/java/src/pi` surface, event/tool classes, Java 25 JAR build | `java_api_surface` + `java_api_smoke` (known class/method surface compiles and integrates; unknown original quirks remain partial) |
+| 16 | Python API completeness | partial | real `mcpi==1.2.1` client and example fixtures; compatibility extension includes `world.getBlocks` | `python_api_compatibility` + `python_examples_smoke` (tracked modern client surface passes) |
+| 17 | Original game loop/tick ordering | confirmed | `src/game/GameLoop.*`; startup/app callgraph anchors exist; exact original update order/timing remains incomplete | `game_loop` (deterministic reconstructed ordering; original timing trace still incomplete) |
 | 18 | Reverse-engineering class map | partial | `docs/reverse-engineering/anchor-index.tsv`; `class-map.md`; LevelChunk and translator notes | `reverse_engineering_docs` |
 | 19 | Differential original-vs-recompile harness | partial | `src/parity/ReferenceCase.*`; `ReferenceSuite.*`; `mcpi-parity` | `parity_framework` + `parity_reference` + `parity_cli` |
-| 20 | Platform coverage | partial | Linux x86-64 + Windows x86-64 CI/release are established | `platform_contract` (planned) |
+| 20 | Platform coverage | partial | `.github/workflows/build.yml`; `docs/platforms.md`; checked-in Linux ARM cross toolchains | `platform_contract` + native CI matrix + ARM cross-build smoke (runtime claims remain separate) |
 
 ## Promotion rule
 
-When a task becomes verifiably complete, update the row in the same commit that adds or strengthens the supporting acceptance test. A green build alone is not sufficient evidence of original parity.
+When a task becomes verifiably complete, update the row in the same commit that adds or strengthens the supporting acceptance test. A green build alone is not sufficient evidence of original parity. Cross-compilation is build evidence only; it does not promote runtime behavior.
