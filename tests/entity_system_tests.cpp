@@ -60,7 +60,7 @@ int main() {
     // Entity 0 remains the real local player and updates the same object.
     const auto local_get = dispatcher.dispatch(Command{"entity.getPos", {"0"}});
     assert(local_get.has_value());
-    dispatcher.dispatch(Command{"entity.setPos", {"0", "1", "2", "3"}});
+    (void)dispatcher.dispatch(Command{"entity.setPos", {"0", "1", "2", "3"}});
     assert(game.entities().find(0)->position() == game.player_position());
 
     // Actual block-hit events retain poll-once and clear semantics.
