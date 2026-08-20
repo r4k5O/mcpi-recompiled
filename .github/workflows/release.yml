@@ -61,7 +61,18 @@ jobs:
               echo "Release tags must use vMAJOR.MINOR.PATCH, got: $tag" >&2
               exit 1
             fi
+            echo "Resolved release tag: $tag"
           else
+            echo "Requested release type: $RELEASE_TYPE"
+            echo "Requested custom version: ${CUSTOM_VERSION:-<empty>}"
+
+            # A supplied custom version is authoritative. This protects against
+            # stale/default dropdown values being submitted alongside the text input.
+            if [[ -n "$CUSTOM_VERSION" ]]; then
+              RELEASE_TYPE="custom"
+            fi
+            echo "Effective release type: $RELEASE_TYPE"
+
             git fetch --tags --force
             latest="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
             if [[ -z "$latest" ]]; then
@@ -113,6 +124,16 @@ jobs:
             esac
 
             tag="v${major}.${minor}.${patch}"
+            echo "Resolved release tag: $tag"
+
+            if [[ -n "$CUSTOM_VERSION" ]]; then
+              expected_custom="v${CUSTOM_VERSION#v}"
+              if [[ "$tag" != "$expected_custom" ]]; then
+                echo "Custom release mismatch: requested $expected_custom but resolved $tag" >&2
+                exit 1
+              fi
+            fi
+
             if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
               echo "Tag already exists: $tag" >&2
               exit 1
