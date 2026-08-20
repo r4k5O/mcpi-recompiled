@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -16,6 +17,10 @@ namespace {
 
 bool close(double a, double b) {
     return std::abs(a - b) < 0.001;
+}
+
+void stage(const char* name) {
+    std::cerr << "[storage_parity] " << name << std::endl;
 }
 
 } // namespace
@@ -26,8 +31,7 @@ int main() {
     using mcpi::storage::StorageFormat;
     using namespace mcpi::storage::nbt;
 
-    // Little-endian NBT round-trip for the primitive/container families needed
-    // by the original PE/Pi level.dat metadata.
+    stage("nbt-roundtrip");
     Tag root = Tag::compound({
         {"Flag", Tag::byte(1)},
         {"Count", Tag::integer(0x01020304)},
@@ -52,8 +56,7 @@ int main() {
     assert(root_name.empty());
     assert(round_tripped == root);
 
-    // The payload integer 0x01020304 must physically be 04 03 02 01 in the
-    // little-endian Pi/PE dialect, not Java Edition's big-endian ordering.
+    stage("little-endian-int");
     std::ostringstream int_stream(std::ios::binary);
     assert(write_named(int_stream, "I", Tag::integer(0x01020304), Endian::Little));
     const std::string int_bytes = int_stream.str();
@@ -63,8 +66,7 @@ int main() {
     assert(static_cast<unsigned char>(int_bytes[6]) == 0x02U);
     assert(static_cast<unsigned char>(int_bytes[7]) == 0x01U);
 
-    // Malformed/truncated input and hostile container lengths must be rejected
-    // rather than allocating unbounded memory or accepting partial payloads.
+    stage("malformed-input");
     std::string malformed = encoded.str();
     malformed.resize(malformed.size() / 2U);
     std::istringstream truncated(malformed, std::ios::binary);
@@ -83,8 +85,7 @@ int main() {
     std::istringstream hostile(hostile_bytes, std::ios::binary);
     assert(!read_named(hostile, rejected_name, rejected, Endian::Little));
 
-    // Pi level.dat metadata: 8-byte little-endian header + NBT containing the
-    // confirmed SpawnX/Y/Z, RandomSeed and Player.Pos fields.
+    stage("pi-level-save-header");
     GameState source;
     source.new_world(0x12345678U);
     source.set_spawn_position({12, 70, 34});
@@ -113,6 +114,7 @@ int main() {
         (static_cast<std::uint32_t>(header[7]) << 24U);
     assert(std::filesystem::file_size(path) == 8U + payload_size);
 
+    stage("pi-level-load");
     GameState loaded;
     assert(storage.load(loaded, path));
     assert(loaded.seed() == source.seed());
@@ -121,9 +123,7 @@ int main() {
     assert(close(loaded.player_position().y, source.player_position().y));
     assert(close(loaded.player_position().z, source.player_position().z));
 
-    // Routing must retain Phase-1 legacy saves while selecting Pi storage for
-    // level.dat. Existing files are sniffed so renaming a file does not corrupt
-    // it by silently choosing the wrong reader.
+    stage("router-path-selection");
     assert(mcpi::storage::storage_format_for_path("world.mcpiworld") ==
            StorageFormat::Legacy);
     assert(mcpi::storage::storage_format_for_path("level.dat") ==
@@ -136,6 +136,7 @@ int main() {
     std::filesystem::remove(pi_path);
     std::filesystem::remove(renamed_pi_path);
 
+    stage("router-legacy-roundtrip");
     source.set_block(20, 70, 20, 57, 6);
     assert(mcpi::storage::save_world(source, legacy_path));
     GameState legacy_loaded;
@@ -143,6 +144,7 @@ int main() {
     assert(legacy_loaded.block_type(20, 70, 20) == 57);
     assert(legacy_loaded.block_data(20, 70, 20) == 6);
 
+    stage("router-pi-sniff");
     assert(mcpi::storage::save_world(source, pi_path));
     std::filesystem::copy_file(
         pi_path,
@@ -155,9 +157,11 @@ int main() {
     assert(sniffed_loaded.seed() == source.seed());
     assert(sniffed_loaded.spawn_position() == source.spawn_position());
 
+    stage("cleanup");
     std::filesystem::remove(path);
     std::filesystem::remove(legacy_path);
     std::filesystem::remove(pi_path);
     std::filesystem::remove(renamed_pi_path);
+    stage("done");
     return 0;
 }
