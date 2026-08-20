@@ -1,4 +1,5 @@
 #include "client/ClientApp.hpp"
+#include "storage/StorageRouter.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -335,7 +336,7 @@ int ClientApp::run() {
     {
         std::scoped_lock lock(game_mutex_);
         if (std::filesystem::exists(options_.world_path)) {
-            (void)game_.load(options_.world_path);
+            (void)storage::load_world(game_, options_.world_path);
         }
     }
 
@@ -384,7 +385,7 @@ int ClientApp::run() {
                         {
                             std::scoped_lock lock(game_mutex_);
                             if (game_.generated_world()) {
-                                (void)game_.save(options_.world_path);
+                                (void)storage::save_world(game_, options_.world_path);
                             }
                         }
                         set_playing(false);
@@ -399,14 +400,14 @@ int ClientApp::run() {
                         {
                             std::scoped_lock lock(game_mutex_);
                             game_.new_world(options_.seed.value_or(default_seed()));
-                            (void)game_.save(options_.world_path);
+                            (void)storage::save_world(game_, options_.world_path);
                         }
                         set_playing(true);
                     } else if (key == SDL_SCANCODE_L) {
                         bool loaded = false;
                         {
                             std::scoped_lock lock(game_mutex_);
-                            loaded = game_.load(options_.world_path);
+                            loaded = storage::load_world(game_, options_.world_path);
                         }
                         if (loaded) {
                             set_playing(true);
@@ -429,10 +430,10 @@ int ClientApp::run() {
                     game_.select_hotbar_slot(static_cast<int>(key - SDL_SCANCODE_1));
                 } else if (key == SDL_SCANCODE_F5) {
                     std::scoped_lock lock(game_mutex_);
-                    (void)game_.save(options_.world_path);
+                    (void)storage::save_world(game_, options_.world_path);
                 } else if (key == SDL_SCANCODE_F9) {
                     std::scoped_lock lock(game_mutex_);
-                    (void)game_.load(options_.world_path);
+                    (void)storage::load_world(game_, options_.world_path);
                 }
             }
 
@@ -499,7 +500,7 @@ int ClientApp::run() {
     {
         std::scoped_lock lock(game_mutex_);
         if (game_.generated_world()) {
-            (void)game_.save(options_.world_path);
+            (void)storage::save_world(game_, options_.world_path);
         }
     }
 
