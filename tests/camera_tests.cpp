@@ -41,7 +41,8 @@ int main() {
     game.set_camera_position({20.0, 30.0, 40.0});
     game.set_camera_mode(CameraMode::Fixed);
     pose = CameraController::resolve(game, 0.7, -0.2);
-    assert(pose.position == mcpi::game::Vec3{20.0, 30.0, 40.0});
+    const mcpi::game::Vec3 fixed_expected{20.0, 30.0, 40.0};
+    assert(pose.position == fixed_expected);
 
     game.set_camera_target_entity(999);
     game.set_camera_mode(CameraMode::Normal);
