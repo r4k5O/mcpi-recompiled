@@ -13,9 +13,21 @@ import pi.tool.Text;
 import pi.tool.Tools;
 import pi.tool.Turtle;
 
-/** Compile-only contract for the class surface shipped with Minecraft Pi. */
+/** Compile/runtime contract for the class surface shipped with Minecraft Pi. */
 public final class OriginalApiSurfaceSmoke {
     private OriginalApiSurfaceSmoke() {}
+
+    public static void main(String[] args) {
+        Class<?>[] classes = {
+            Color.class, Item.class, EventFactory.class, Log.class,
+            BlockEvent.class, BlockAddedEvent.class, BlockRemovedEvent.class, BlockHitEvent.class,
+            ChatMessageEvent.class, EntityEvent.class, PlayerEvent.class, PlayerConnectEvent.class,
+            Csg.class, Text.class, Tools.class, Turtle.class,
+        };
+        if (classes.length != 16 || Color.WHITE.ordinal() != 0 || Color.BLACK.ordinal() != 15 || Item.CAMERA == null) {
+            throw new AssertionError("original Java surface constants changed");
+        }
+    }
 
     static void coreSurface(Minecraft minecraft) {
         Block block = Block.STONE.withData(1);
@@ -33,15 +45,6 @@ public final class OriginalApiSurfaceSmoke {
     }
 
     static void originalClassSurface(Turtle turtle) {
-        Class<?>[] classes = {
-            Color.class, Item.class, EventFactory.class, Log.class,
-            BlockEvent.class, BlockAddedEvent.class, BlockRemovedEvent.class, BlockHitEvent.class,
-            ChatMessageEvent.class, EntityEvent.class, PlayerEvent.class, PlayerConnectEvent.class,
-            Csg.class, Text.class, Tools.class, Turtle.class,
-        };
-        if (classes.length != 16 || Color.WHITE.ordinal() != 0 || Color.BLACK.ordinal() != 15 || Item.CAMERA == null) {
-            throw new AssertionError("original Java surface constants changed");
-        }
         turtle.setHome(Vec.ZERO).home().on().off().block(Block.WOOD_PLANKS).jump(1, 2, 3)
               .left().right().around().forward(1).back(1).up(1).down(1);
     }
