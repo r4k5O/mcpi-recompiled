@@ -55,7 +55,7 @@ Implemented Phase-2 infrastructure and reconstruction includes:
 - a safe local asset-source abstraction with traversal rejection and project-owned fallback data;
 - full visible voxel-face chunk meshes, metadata-dependent UV coordinates, light values, opaque/translucent separation, software depth testing, fog and selection outline;
 - title/game/pause state, an 848×480-reference HUD layout, chat lifetime handling and local positional sound lookup;
-- CI/build contracts for Linux, Windows, macOS and Linux ARM cross-build portability;
+- CI/build contracts for Linux, Windows, macOS and Linux ARM full-client portability;
 - a cross-subsystem Phase-2 acceptance gate plus a parity-report contract that rejects unsupported `matched` rows.
 
 ### What Phase 2 still does *not* claim
@@ -64,28 +64,56 @@ A working reconstruction is not automatically an original match. In particular, 
 
 ### Original Minecraft Pi assets
 
-This repository does **not** redistribute Mojang/Microsoft textures, sounds or packaged game data. If you already have an original Minecraft: Pi Edition installation, point the desktop client at a local asset directory:
+This repository does **not** redistribute Mojang/Microsoft textures, sounds or packaged game data. Instead, Linux/macOS/ARM release archives include `setup.sh`, which can fetch the original free Minecraft: Pi Edition 0.1.1 archive directly from the official Minecraft website at setup time.
+
+From an extracted release archive:
 
 ```bash
-./mcpi-recompiled --assets /path/to/your/minecraft-pi/assets
+./setup.sh
 ```
 
-If the original archive is unpacked as a directory named `mcpi` in the current working directory, the loader detects `./mcpi` automatically. The loader only reads local files, rejects path traversal, never downloads assets, and falls back to project-owned/procedural data when an optional asset is unavailable. `MCPI_ASSETS` can also name a local asset root. Supplying original assets does not make unresolved renderer/audio behavior automatically `matched`.
+The script downloads the official archive, safely extracts its `mcpi/` directory next to `mcpi-recompiled`, and then launches the reconstructed client with that directory as its asset root. The original Minecraft Pi files are never committed to this repository or embedded in the release archive.
+
+Useful setup modes:
+
+```bash
+# Download/extract assets but do not launch the client
+./setup.sh --assets-only
+
+# Re-download/reinstall the asset directory
+./setup.sh --force
+
+# Use an archive that you already downloaded (offline setup)
+MCPI_ARCHIVE="$HOME/Downloads/minecraft-pi-0.1.1.tar.gz.zip" ./setup.sh
+
+# Choose another installation directory
+MCPI_ASSETS="$HOME/minecraft-pi" ./setup.sh
+```
+
+`setup.sh` requires Bash and Python 3. For online setup it uses `curl` and falls back to `wget`. Archive members are checked before extraction so absolute paths, `..` path traversal, symbolic links, hard links and device entries cannot escape the temporary extraction directory.
+
+Manual asset selection is still supported. If you already have an original Minecraft: Pi Edition installation, point the client at a local asset directory:
+
+```bash
+./mcpi-recompiled --assets /path/to/your/minecraft-pi
+```
+
+If the original archive is unpacked as a directory named `mcpi` in the current working directory, the loader detects `./mcpi` automatically. `MCPI_ASSETS` can also name a local asset root. Supplying original assets does not make unresolved renderer/audio behavior automatically `matched`.
 
 ## Releases
 
-The preferred release path is now entirely in GitHub:
+The preferred release path is entirely in GitHub:
 
 1. open **Actions → Release → Run workflow**;
 2. choose `patch`, `minor`, `major`, or `custom`;
 3. for `custom`, enter a version such as `0.2.5` or `v0.2.5`;
 4. run the workflow.
 
-The workflow reads the newest `vMAJOR.MINOR.PATCH` tag, computes the requested next version, creates the annotated tag on `main`, builds and tests Linux x86-64 and Windows x86-64, packages both platforms, generates `SHA256SUMS.txt`, and publishes the GitHub Release. Release runs are serialized so two simultaneous manual releases cannot race for the same next version.
+The workflow reads the newest `vMAJOR.MINOR.PATCH` tag and resolves the requested next version against the exact `main` source SHA. It then builds and tests Linux x86-64, Windows x86-64, macOS ARM64, macOS x86-64, Linux ARM64 and Linux ARM32. Publication happens only after all required build jobs have succeeded, and the GitHub Release tag targets the exact source SHA that was built.
 
-Manually pushed `v*` tags remain supported as an alternative. Release assets include `README.md`, `LICENSE`, `NOTICE`, and `LEGAL.md` alongside the executable. Release notes are generated automatically.
+Manually pushed `v*` tags remain supported as an alternative. Release assets include `README.md`, `LICENSE`, `NOTICE`, and `LEGAL.md` alongside the executable. Unix and ARM archives also include executable `setup.sh` for one-command original Pi asset setup. `SHA256SUMS.txt` is generated for the published archives and release notes are generated automatically.
 
-The release workflows deliberately use maintained GitHub Action majors. CI also installs the Linux SDL development dependencies needed by the enabled backends, and project warnings are fixed in source rather than hidden by weaker compiler flags.
+Release runs are serialized so two simultaneous manual releases cannot race for the same next version. The release workflows deliberately use maintained GitHub Action majors. CI also installs the Linux SDL development dependencies needed by the enabled backends, and project warnings are fixed in source rather than hidden by weaker compiler flags.
 
 The intended first public release is **`v0.1.0`**, representing the completed Phase-1 functional baseline. It is also the recommended fork point for projects that want to modernize gameplay, visuals, UI, or other behavior separately from this repository's original-parity work.
 
@@ -106,7 +134,7 @@ Useful options:
 --headless            Run without a window
 --world <path>        World save path (default: world.mcpiworld)
 --seed <uint32>       Seed used when creating a new world
---assets <path>       Local Minecraft Pi asset directory; never downloaded
+--assets <path>       Local Minecraft Pi asset directory; never auto-downloaded by the executable itself
 --help                Show usage
 ```
 
@@ -137,9 +165,9 @@ cmake --build build --config Release --parallel
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Tests cover protocol/TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, worldgen/lighting/block/storage reconstruction, player/inventory/entities/game-loop/network boundaries, transcript parity, camera transforms, asset safety, chunk meshes, UI/audio contracts, Python and Java clients, platform build contracts, the main executable, release/reverse-engineering documentation contracts, and integrated Phase-1/Phase-2 acceptance gates.
+Tests cover protocol/TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, worldgen/lighting/block/storage reconstruction, player/inventory/entities/game-loop/network boundaries, transcript parity, camera transforms, asset safety, chunk meshes, UI/audio contracts, Python and Java clients, platform build contracts, the main executable, release/setup/reverse-engineering documentation contracts, and integrated Phase-1/Phase-2 acceptance gates.
 
-Additional native and cross-build recipes are documented in [`docs/platforms.md`](docs/platforms.md).
+Additional native and ARM build recipes are documented in [`docs/platforms.md`](docs/platforms.md).
 
 ## Reconstruction approach
 
