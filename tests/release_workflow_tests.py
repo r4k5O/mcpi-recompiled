@@ -24,13 +24,26 @@ def main() -> int:
 
     release_fragments = {
         "version tag trigger": 'tags:\n      - "v*"',
+        "manual release trigger": "workflow_dispatch:",
+        "release type input": "release_type:",
+        "patch release option": "- patch",
+        "minor release option": "- minor",
+        "major release option": "- major",
+        "custom release option": "- custom",
+        "custom version input": "custom_version:",
         "release permission": "contents: write",
+        "release preparation job": "prepare:",
+        "semantic tag discovery": "git tag --list 'v[0-9]*.[0-9]*.[0-9]*'",
+        "annotated tag creation": 'git tag -a "$tag"',
+        "tag push": 'git push origin "$tag"',
+        "build prepared tag checkout": "ref: ${{ needs.prepare.outputs.tag }}",
         "Linux release runner": "ubuntu-latest",
         "Windows release runner": "windows-latest",
         "Linux archive": "linux-x86_64.tar.gz",
         "Windows archive": "windows-x86_64.zip",
         "checksums": "SHA256SUMS.txt",
         "generated notes": "generate_release_notes: true",
+        "explicit release tag": "tag_name: ${{ needs.prepare.outputs.tag }}",
     }
 
     for label, fragment in release_fragments.items():
@@ -55,7 +68,7 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with maintained action majors.")
+    print("GitHub workflow/release contract passed with maintained action majors and manual semantic releases.")
     return 0
 
 
