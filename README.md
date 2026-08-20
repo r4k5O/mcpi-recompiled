@@ -3,7 +3,7 @@
 A source-reconstruction and native-port project for **Minecraft: Pi Edition 0.1.1 alpha**, focused on reproducing the original game and its programming API on modern systems.
 
 > [!IMPORTANT]
-> This project is unofficial and is not affiliated with Mojang Studios or Microsoft. It does **not** redistribute the original `minecraft-pi` executable or game assets. Users must obtain any original files they are legally entitled to use themselves.
+> This project is unofficial and is not affiliated with Mojang Studios or Microsoft. **Minecraft: Pi Edition was officially released as a free download**; this project does not imply that the original game had to be purchased. The original game and its Mojang/Microsoft-owned executable, assets, trademarks, and other material are not covered by this repository's license and are not intentionally redistributed here.
 
 ## Phase 1 — functional compatibility foundation ✅
 
@@ -45,7 +45,7 @@ The release workflows deliberately use maintained GitHub Action majors. CI also 
 
 The intended first public release is **`v0.1.0`**, representing the completed Phase-1 functional baseline. It is also the recommended fork point for projects that want to modernize gameplay, visuals, UI, or other behavior separately from this repository's original-parity work.
 
-The project code license must be documented before that first public release is tagged.
+The Phase-1 baseline is licensed for **noncommercial** use under PolyForm Noncommercial 1.0.0 as described in [`LICENSE`](LICENSE) and [`LEGAL.md`](LEGAL.md).
 
 ## Run
 
@@ -118,4 +118,6 @@ Do not commit original Mojang executables, textures, sounds, packaged game data,
 
 ## License
 
-Licensing for newly written project code will be documented before the first public release. Original Minecraft Pi files remain subject to their own terms and are not part of this repository.
+Independently written project code and project-owned material are licensed under the **PolyForm Noncommercial License 1.0.0** unless a file or directory states otherwise. This is a source-available, noncommercial license rather than an OSI-approved open-source license.
+
+See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE), and [`LEGAL.md`](LEGAL.md) for the license reference, required notice, and scope. The license does **not** grant rights to Minecraft, Minecraft: Pi Edition, Mojang/Microsoft assets, trademarks, the original executable, or other third-party material.
