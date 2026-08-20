@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ANCHORS = ROOT / "docs" / "reverse-engineering" / "anchor-index.tsv"
 CLASS_MAP = ROOT / "docs" / "reverse-engineering" / "class-map.md"
+WORLDGEN_REFERENCE = ROOT / "tests" / "parity" / "reference" / "worldgen-structure.ref"
 
 REQUIRED = {
     "NinecraftApp",
@@ -30,6 +31,7 @@ REQUIRED = {
 def main() -> int:
     assert ANCHORS.exists(), "anchor-index.tsv must exist"
     assert CLASS_MAP.exists(), "class-map.md must exist"
+    assert WORLDGEN_REFERENCE.exists(), "worldgen-structure.ref must exist"
 
     lines = ANCHORS.read_text(encoding="utf-8").splitlines()
     assert lines, "anchor index must not be empty"
@@ -77,6 +79,17 @@ def main() -> int:
         "open",
     ):
         assert required in text, f"class map missing {required!r}"
+
+    worldgen_reference = WORLDGEN_REFERENCE.read_text(encoding="utf-8")
+    for required in (
+        "name=randomlevelsource-levelchunk-construction",
+        "expected=constructor=0x000b0a34;same-chunk-coordinates=true",
+        "name=randomlevelsource-terrain-stage-calls",
+        "expected=0x000b3b54;0x000b32ec;same-block-buffer=true;same-chunk-coordinates=true",
+        "name=randomlevelsource-post-generation-virtual",
+        "expected=LevelChunk-vtable-offset=0x10",
+    ):
+        assert required in worldgen_reference, f"worldgen reference missing {required!r}"
 
     print(f"reverse-engineering anchor contract passed with {len(seen)} symbols")
     return 0
