@@ -67,35 +67,65 @@ jobs:
           path: build/parity-artifacts/reconstruction.ppm
           if-no-files-found: ignore
 
-  cross-build:
-    name: Linux ${{ matrix.arch }} cross-build
-    runs-on: ubuntu-latest
+  arm-build:
+    name: Linux ${{ matrix.arch }} full client
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: ARM64
-            packages: gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-            toolchain: cmake/toolchains/linux-arm64.cmake
+            docker_platform: linux/arm64
           - arch: ARM32
-            packages: gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-            toolchain: cmake/toolchains/linux-arm32.cmake
+            docker_platform: linux/arm/v7
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install cross compiler
+      - name: Set up QEMU for ARM
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64,arm
+
+      - name: Build full ARM client in target userland
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ${{ matrix.packages }}
+          set -euo pipefail
+          rm -rf build-arm
 
-      - name: Configure core cross-build
-        run: >-
-          cmake -S . -B build
-          -DMCPI_BUILD_TESTS=OFF
-          -DMCPI_BUILD_CLIENT=OFF
-          -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }}
+          docker run --rm \
+            --platform "${{ matrix.docker_platform }}" \
+            -e DEBIAN_FRONTEND=noninteractive \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            ubuntu:22.04 \
+            bash -lc '
+              set -euo pipefail
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                build-essential \
+                ca-certificates \
+                cmake \
+                file \
+                pkg-config \
+                libasound2-dev \
+                libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev \
+                libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+                libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev
 
-      - name: Build core cross-build
-        run: cmake --build build --config Release --parallel
+              cmake -S . -B build-arm \
+                -DMCPI_BUILD_TESTS=OFF \
+                -DMCPI_BUILD_CLIENT=ON
+              cmake --build build-arm --config Release --parallel 2
+
+              test -x "build-arm/mcpi-recompiled"
+              file build-arm/mcpi-recompiled
+            '
+
+      - name: Verify ARM executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "build-arm/mcpi-recompiled"
+          file build-arm/mcpi-recompiled

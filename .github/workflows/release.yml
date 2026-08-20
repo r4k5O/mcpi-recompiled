@@ -239,20 +239,25 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  cross-build:
-    name: Build Linux ${{ matrix.arch }} cross-build
+  arm-build:
+    name: Build Linux ${{ matrix.arch }} full client
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: ARM64
-            packages: gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-            toolchain: cmake/toolchains/linux-arm64.cmake
+            docker_platform: linux/arm64
+            artifact: release-linux-arm64
+            package_suffix: linux-arm64
           - arch: ARM32
-            packages: gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-            toolchain: cmake/toolchains/linux-arm32.cmake
+            docker_platform: linux/arm/v7
+            artifact: release-linux-arm32
+            package_suffix: linux-arm32
+
+    env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
 
     steps:
       - name: Checkout release source
@@ -260,27 +265,79 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.source_sha }}
 
-      - name: Install cross compiler
+      - name: Set up QEMU for ARM
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64,arm
+
+      - name: Build full ARM client in target userland
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ${{ matrix.packages }}
+          set -euo pipefail
+          rm -rf build-arm
 
-      - name: Configure cross-build
-        run: >-
-          cmake -S . -B build-cross
-          -DMCPI_BUILD_TESTS=OFF
-          -DMCPI_BUILD_CLIENT=OFF
-          -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }}
+          docker run --rm \
+            --platform "${{ matrix.docker_platform }}" \
+            -e DEBIAN_FRONTEND=noninteractive \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            ubuntu:22.04 \
+            bash -lc '
+              set -euo pipefail
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                build-essential \
+                ca-certificates \
+                cmake \
+                file \
+                pkg-config \
+                libasound2-dev \
+                libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev \
+                libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+                libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev
 
-      - name: Build cross-build
-        run: cmake --build build-cross --config Release --parallel
+              cmake -S . -B build-arm \
+                -DMCPI_BUILD_TESTS=OFF \
+                -DMCPI_BUILD_CLIENT=ON
+              cmake --build build-arm --config Release --parallel 2
+
+              test -x "build-arm/mcpi-recompiled"
+              file build-arm/mcpi-recompiled
+            '
+
+      - name: Verify ARM executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "build-arm/mcpi-recompiled"
+          file build-arm/mcpi-recompiled
+
+      - name: Package ARM client
+        shell: bash
+        run: |
+          set -euo pipefail
+          package="mcpi-recompiled-${RELEASE_TAG}-${{ matrix.package_suffix }}"
+          mkdir -p "dist/${package}"
+          cp build-arm/mcpi-recompiled "dist/${package}/mcpi-recompiled"
+          cp README.md LICENSE NOTICE LEGAL.md "dist/${package}/"
+          chmod +x "dist/${package}/mcpi-recompiled"
+          tar -C dist -czf "dist/${package}.tar.gz" "${package}"
+          rm -rf "dist/${package}"
+
+      - name: Upload ARM release package
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
 
   publish:
     name: Publish GitHub Release
     needs:
       - prepare
       - build
-      - cross-build
+      - arm-build
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -314,4 +371,6 @@ jobs:
             release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-windows-x86_64.zip
             release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-macos-arm64.tar.gz
             release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-macos-x86_64.tar.gz
+            release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-linux-arm64.tar.gz
+            release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-linux-arm32.tar.gz
             release-assets/SHA256SUMS.txt
