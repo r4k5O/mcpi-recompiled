@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/GameApi.hpp"
-#include "game/Inventory.hpp"
+#include "game/Player.hpp"
 #include "world/BlockBehavior.hpp"
 #include "world/LightEngine.hpp"
 #include "world/World.hpp"
@@ -33,6 +33,8 @@ public:
     [[nodiscard]] std::uint32_t seed() const noexcept;
     [[nodiscard]] bool generated_world() const noexcept;
 
+    [[nodiscard]] Player& player() noexcept;
+    [[nodiscard]] const Player& player() const noexcept;
     [[nodiscard]] Vec3 player_position() const override;
     void set_player_position(const Vec3& position) override;
     void move_player(const Vec3& delta) noexcept;
@@ -95,12 +97,11 @@ private:
     std::uint32_t seed_ = 0;
     bool generated_world_ = false;
     IVec3 spawn_position_{128, 64, 128};
-    Vec3 player_position_{128.0, 64.0, 128.0};
+    Player player_{0};
     world::World world_;
     world::LightEngine light_engine_;
     world::BlockUpdateEngine block_updates_;
     std::unordered_map<std::uint32_t, world::BlockState> changes_;
-    Inventory inventory_;
     std::optional<Checkpoint> checkpoint_;
     std::unordered_map<std::string, bool> world_settings_;
     std::unordered_map<std::string, bool> player_settings_;
