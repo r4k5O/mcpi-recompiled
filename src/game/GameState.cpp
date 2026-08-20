@@ -19,6 +19,7 @@ constexpr int legacy_save_version = 1;
 } // namespace
 
 GameState::GameState() {
+    (void)entities_.register_external(player_);
     world_settings_.emplace("world_immutable", false);
     world_settings_.emplace("nametags_visible", true);
     player_settings_.emplace("autojump", true);
@@ -215,6 +216,14 @@ const Player& GameState::player() const noexcept {
     return player_;
 }
 
+EntityRegistry& GameState::entities() noexcept {
+    return entities_;
+}
+
+const EntityRegistry& GameState::entities() const noexcept {
+    return entities_;
+}
+
 Vec3 GameState::player_position() const {
     return player_.position();
 }
@@ -233,6 +242,30 @@ IVec3 GameState::spawn_position() const {
 
 void GameState::set_spawn_position(const IVec3& position) noexcept {
     spawn_position_ = position;
+}
+
+std::vector<int> GameState::player_ids() const {
+    return entities_.find(player_.id()) != nullptr
+        ? std::vector<int>{player_.id()}
+        : std::vector<int>{};
+}
+
+bool GameState::entity_position(int id, Vec3& position) const {
+    const Entity* entity = entities_.find(id);
+    if (entity == nullptr) {
+        return false;
+    }
+    position = entity->position();
+    return true;
+}
+
+bool GameState::set_entity_position(int id, const Vec3& position) {
+    Entity* entity = entities_.find(id);
+    if (entity == nullptr) {
+        return false;
+    }
+    entity->set_position(position);
+    return true;
 }
 
 int GameState::block_type(int x, int y, int z) const {
