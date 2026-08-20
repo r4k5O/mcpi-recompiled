@@ -34,6 +34,7 @@ def main() -> int:
         "release permission": "contents: write",
         "release preparation job": "prepare:",
         "semantic tag discovery": "git tag --list 'v[0-9]*.[0-9]*.[0-9]*'",
+        "safe sorted tag collection": "mapfile -t release_tags",
         "custom input precedence": 'if [[ -n "$CUSTOM_VERSION" ]]; then',
         "custom input forces custom mode": 'RELEASE_TYPE="custom"',
         "requested type log": 'echo "Requested release type: $RELEASE_TYPE"',
@@ -41,23 +42,29 @@ def main() -> int:
         "resolved tag log": 'echo "Resolved release tag: $tag"',
         "custom resolution guard": 'expected_custom="v${CUSTOM_VERSION#v}"',
         "custom mismatch failure": 'Custom release mismatch:',
-        "annotated tag creation": 'git tag -a "$tag"',
-        "tag push": 'git push origin "$tag"',
-        "build prepared tag checkout": "ref: ${{ needs.prepare.outputs.tag }}",
+        "source SHA output declaration": "source_sha: ${{ steps.version.outputs.source_sha }}",
+        "source SHA resolution": 'source_sha="$(git rev-parse HEAD)"',
+        "source SHA output": 'echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"',
+        "build prepared source checkout": "ref: ${{ needs.prepare.outputs.source_sha }}",
         "Linux release runner": "ubuntu-latest",
         "Windows release runner": "windows-latest",
         "Linux archive": "linux-x86_64.tar.gz",
-        "Windows archive": "windows-x86_64.zip",
+        "Windows archive": "windows_x86_64.zip",
         "checksums": "SHA256SUMS.txt",
         "generated notes": "generate_release_notes: true",
         "explicit release tag": "tag_name: ${{ needs.prepare.outputs.tag }}",
+        "release target commit": "target_commitish: ${{ needs.prepare.outputs.source_sha }}",
     }
 
     for label, fragment in release_fragments.items():
         require_fragment(release, fragment, label)
 
+    # Manual releases must not publish a tag until build/test/package jobs have passed.
+    require('git tag -a "$tag"' not in release, "prepare must not create the release tag")
+    require('git push origin "$tag"' not in release, "prepare must not push the release tag")
+    require("| head -n1" not in release, "tag discovery must not depend on a pipefail-sensitive head pipeline")
+
     # Keep GitHub-hosted workflows on maintained Node 24-era action majors.
-    # This prevents the deprecation/runtime warnings that older majors emit.
     for workflow_name, text in (("build", build), ("release", release)):
         require_fragment(text, "actions/checkout@v7", f"{workflow_name} checkout v7")
         require_fragment(text, "actions/setup-java@v5", f"{workflow_name} setup-java v5")
@@ -75,7 +82,7 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with maintained action majors and guarded custom semantic releases.")
+    print("GitHub workflow/release contract passed with post-build tag publication and maintained actions.")
     return 0
 
 
