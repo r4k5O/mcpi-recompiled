@@ -3,6 +3,7 @@
 #include "world/WorldGenerator.hpp"
 
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -11,7 +12,8 @@ namespace mcpi::game {
 namespace {
 
 constexpr const char* save_magic = "MCPI_RECOMPILED_WORLD";
-constexpr int save_version = 1;
+constexpr int save_version = 2;
+constexpr int legacy_save_version = 1;
 
 } // namespace
 
@@ -23,8 +25,7 @@ GameState::GameState() {
 }
 
 void GameState::reset_hotbar() noexcept {
-    hotbar_ = {1, 3, 4, 5, 20, 45, 46, 57, 89};
-    selected_hotbar_slot_ = 0;
+    inventory_.reset_creative_defaults();
 }
 
 bool GameState::inside_world(int x, int y, int z) noexcept {
@@ -81,10 +82,11 @@ bool GameState::save(const std::filesystem::path& path) const {
     output << "spawn " << spawn_position_.x << ' ' << spawn_position_.y << ' ' << spawn_position_.z << '\n';
     output << std::setprecision(17);
     output << "player " << player_position_.x << ' ' << player_position_.y << ' ' << player_position_.z << '\n';
-    output << "selected " << selected_hotbar_slot_ << '\n';
-    output << "hotbar";
-    for (int block : hotbar_) {
-        output << ' ' << block;
+    output << "selected " << inventory_.selected_slot() << '\n';
+    output << "inventory";
+    for (int slot_index = 0; slot_index < hotbar_size; ++slot_index) {
+        const auto& stack = inventory_.slot(slot_index);
+        output << ' ' << stack.item_id << ' ' << stack.count << ' ' << stack.data;
     }
     output << '\n';
     output << "changes " << changes_.size() << '\n';
@@ -103,7 +105,8 @@ bool GameState::load(const std::filesystem::path& path) {
 
     std::string magic;
     int version = 0;
-    if (!(input >> magic >> version) || magic != save_magic || version != save_version) {
+    if (!(input >> magic >> version) || magic != save_magic ||
+        (version != legacy_save_version && version != save_version)) {
         return false;
     }
 
@@ -113,7 +116,7 @@ bool GameState::load(const std::filesystem::path& path) {
     IVec3 loaded_spawn{};
     Vec3 loaded_player{};
     int loaded_selected = 0;
-    std::array<int, hotbar_size> loaded_hotbar{};
+    std::array<ItemStack, hotbar_size> loaded_inventory{};
     std::size_t change_count = 0;
 
     if (!(input >> label >> generated) || label != "generated") return false;
@@ -121,10 +124,25 @@ bool GameState::load(const std::filesystem::path& path) {
     if (!(input >> label >> loaded_spawn.x >> loaded_spawn.y >> loaded_spawn.z) || label != "spawn") return false;
     if (!(input >> label >> loaded_player.x >> loaded_player.y >> loaded_player.z) || label != "player") return false;
     if (!(input >> label >> loaded_selected) || label != "selected") return false;
-    if (!(input >> label) || label != "hotbar") return false;
-    for (int& block : loaded_hotbar) {
-        if (!(input >> block)) return false;
+
+    if (!(input >> label)) return false;
+    if (version == legacy_save_version) {
+        if (label != "hotbar") return false;
+        for (auto& stack : loaded_inventory) {
+            if (!(input >> stack.item_id)) return false;
+            stack.count = 1;
+            stack.data = 0;
+        }
+    } else {
+        if (label != "inventory") return false;
+        for (auto& stack : loaded_inventory) {
+            if (!(input >> stack.item_id >> stack.count >> stack.data)) return false;
+            if (stack.item_id < 0 || stack.count < 0 || stack.data < 0) {
+                return false;
+            }
+        }
     }
+
     if (!(input >> label >> change_count) || label != "changes") return false;
     if (change_count > 8'388'608U) {
         return false;
@@ -150,12 +168,15 @@ bool GameState::load(const std::filesystem::path& path) {
         changes_.clear();
         checkpoint_.reset();
         block_updates_.clear();
+        reset_hotbar();
     }
 
     spawn_position_ = loaded_spawn;
     player_position_ = loaded_player;
-    hotbar_ = loaded_hotbar;
-    selected_hotbar_slot_ = std::clamp(loaded_selected, 0, hotbar_size - 1);
+    for (int slot_index = 0; slot_index < hotbar_size; ++slot_index) {
+        inventory_.slot(slot_index) = loaded_inventory[static_cast<std::size_t>(slot_index)];
+    }
+    inventory_.select(loaded_selected);
 
     changes_ = loaded_changes;
     for (const auto& [key, block] : changes_) {
@@ -270,35 +291,46 @@ int GameState::height_at(int x, int z) const {
     return world_.height_at(x, z);
 }
 
+Inventory& GameState::inventory() noexcept {
+    return inventory_;
+}
+
+const Inventory& GameState::inventory() const noexcept {
+    return inventory_;
+}
+
 int GameState::selected_hotbar_slot() const noexcept {
-    return selected_hotbar_slot_;
+    return inventory_.selected_slot();
 }
 
 void GameState::select_hotbar_slot(int slot) noexcept {
-    if (slot >= 0 && slot < hotbar_size) {
-        selected_hotbar_slot_ = slot;
-    }
+    inventory_.select(slot);
 }
 
 int GameState::hotbar_block(int slot) const noexcept {
-    return slot >= 0 && slot < hotbar_size ? hotbar_[static_cast<std::size_t>(slot)] : 0;
+    if (slot < 0 || slot >= hotbar_size) {
+        return 0;
+    }
+    return inventory_.slot(slot).item_id;
 }
 
 void GameState::set_hotbar_block(int slot, int block_type) noexcept {
-    if (slot >= 0 && slot < hotbar_size) {
-        hotbar_[static_cast<std::size_t>(slot)] = block_type;
+    if (slot < 0 || slot >= hotbar_size) {
+        return;
     }
+    inventory_.slot(slot) = ItemStack{block_type, 1, 0};
 }
 
 int GameState::selected_block() const noexcept {
-    return hotbar_block(selected_hotbar_slot_);
+    return inventory_.slot(inventory_.selected_slot()).item_id;
 }
 
 void GameState::place_selected_block(int x, int y, int z) {
     if (world_setting("world_immutable")) {
         return;
     }
-    set_block(x, y, z, selected_block(), 0);
+    const auto& stack = inventory_.slot(inventory_.selected_slot());
+    set_block(x, y, z, stack.item_id, stack.data);
 }
 
 void GameState::break_block(int x, int y, int z) {
@@ -319,6 +351,7 @@ void GameState::restore_checkpoint() {
     world_ = checkpoint_->world;
     player_position_ = checkpoint_->player_position;
     changes_ = checkpoint_->changes;
+    light_engine_.rebuild(world_);
     block_updates_.clear();
 }
 
