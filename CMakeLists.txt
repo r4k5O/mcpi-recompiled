@@ -19,8 +19,26 @@ add_library(mcpi_core
     src/api/ApiDispatcher.cpp
     src/api/ApiServer.cpp
     src/api/Command.cpp
+    src/game/Entity.cpp
+    src/game/EntityRegistry.cpp
+    src/game/GameLoop.cpp
     src/game/GameState.cpp
+    src/game/GameStateLoop.cpp
+    src/game/Inventory.cpp
+    src/game/Physics.cpp
+    src/game/Player.cpp
+    src/network/NetworkHandler.cpp
+    src/network/Packet.cpp
+    src/parity/ReferenceCase.cpp
+    src/parity/ReferenceSuite.cpp
+    src/storage/LegacyLevelStorage.cpp
+    src/storage/Nbt.cpp
+    src/storage/PiLevelStorage.cpp
+    src/storage/StorageRouter.cpp
+    src/world/BlockBehavior.cpp
     src/world/Chunk.cpp
+    src/world/LightEngine.cpp
+    src/world/RandomLevelSource.cpp
     src/world/World.cpp
     src/world/WorldGenerator.cpp
 )
@@ -71,6 +89,8 @@ if(MCPI_BUILD_CLIENT)
     endif()
 endif()
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Phase2Sources.cmake)
+
 add_executable(mcpi-recompiled
     src/main.cpp
 )
@@ -79,6 +99,16 @@ target_link_libraries(mcpi-recompiled PRIVATE mcpi_core)
 if(MCPI_BUILD_CLIENT)
     target_link_libraries(mcpi-recompiled PRIVATE mcpi_client)
     target_compile_definitions(mcpi-recompiled PRIVATE MCPI_BUILD_CLIENT=1 SDL_MAIN_HANDLED)
+endif()
+
+add_executable(mcpi-parity
+    src/parity/main.cpp
+)
+target_link_libraries(mcpi-parity PRIVATE mcpi_core)
+if(MSVC)
+    target_compile_options(mcpi-parity PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(mcpi-parity PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 if(MCPI_BUILD_TESTS)
@@ -107,13 +137,56 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_phase1_acceptance_tests tests/phase1_acceptance_tests.cpp)
     target_link_libraries(mcpi_phase1_acceptance_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_parity_framework_tests tests/parity_framework_tests.cpp)
+    target_link_libraries(mcpi_parity_framework_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_parity_reference_tests tests/parity_reference_tests.cpp)
+    target_link_libraries(mcpi_parity_reference_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_worldgen_parity_tests tests/worldgen_parity_tests.cpp)
+    target_link_libraries(mcpi_worldgen_parity_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_lighting_parity_tests tests/lighting_parity_tests.cpp)
+    target_link_libraries(mcpi_lighting_parity_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_block_behavior_tests tests/block_behavior_tests.cpp)
+    target_link_libraries(mcpi_block_behavior_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_storage_parity_tests tests/storage_parity_tests.cpp)
+    target_link_libraries(mcpi_storage_parity_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_inventory_tests tests/inventory_tests.cpp)
+    target_link_libraries(mcpi_inventory_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_player_physics_tests tests/player_physics_tests.cpp)
+    target_link_libraries(mcpi_player_physics_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_game_state_player_tests tests/game_state_player_tests.cpp)
+    target_link_libraries(mcpi_game_state_player_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_entity_system_tests tests/entity_system_tests.cpp)
+    target_link_libraries(mcpi_entity_system_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_game_loop_tests tests/game_loop_tests.cpp)
+    target_link_libraries(mcpi_game_loop_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_network_parity_tests tests/network_parity_tests.cpp)
+    target_link_libraries(mcpi_network_parity_tests PRIVATE mcpi_core)
+
+    add_executable(mcpi_api_transcript_parity_tests tests/api_transcript_parity_tests.cpp)
+    target_link_libraries(mcpi_api_transcript_parity_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
+
+    add_executable(mcpi_python_compat_host tests/support/python_compat_host.cpp)
+    target_link_libraries(mcpi_python_compat_host PRIVATE mcpi_core)
 
     file(GLOB_RECURSE MCPI_JAVA_SOURCES CONFIGURE_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/clients/java/src/*.java
     )
     set(MCPI_JAVA_CLASSES_DIR ${CMAKE_CURRENT_BINARY_DIR}/java-classes)
+    set(MCPI_JAVA_JAR ${CMAKE_CURRENT_BINARY_DIR}/mcpi-java.jar)
     add_custom_target(mcpi_java_client ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${MCPI_JAVA_CLASSES_DIR}
         COMMAND ${Java_JAVAC_EXECUTABLE}
@@ -121,10 +194,23 @@ if(MCPI_BUILD_TESTS)
                 -d ${MCPI_JAVA_CLASSES_DIR}
                 ${MCPI_JAVA_SOURCES}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
-        SOURCES ${MCPI_JAVA_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/OriginalApiSurfaceSmoke.java
+        SOURCES
+                ${MCPI_JAVA_SOURCES}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/JavaApiSmoke.java
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/java/OriginalApiSurfaceSmoke.java
         COMMENT "Compiling Minecraft Pi Java compatibility client"
         VERBATIM
     )
+    add_custom_command(
+        OUTPUT ${MCPI_JAVA_JAR}
+        COMMAND ${Java_JAR_EXECUTABLE} --create --file ${MCPI_JAVA_JAR}
+                -C ${MCPI_JAVA_CLASSES_DIR} pi
+        DEPENDS mcpi_java_client
+        COMMENT "Packaging Minecraft Pi Java compatibility JAR"
+        VERBATIM
+    )
+    add_custom_target(mcpi_java_jar ALL DEPENDS ${MCPI_JAVA_JAR})
 
     add_test(NAME protocol COMMAND mcpi_protocol_tests)
     add_test(NAME api_server COMMAND mcpi_api_server_tests)
@@ -133,11 +219,51 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME chunk_storage COMMAND mcpi_chunk_storage_tests)
     add_test(NAME world_lifecycle COMMAND mcpi_world_lifecycle_tests)
     add_test(NAME phase1_acceptance COMMAND mcpi_phase1_acceptance_tests)
+    add_test(NAME parity_framework COMMAND mcpi_parity_framework_tests)
+    add_test(
+        NAME parity_reference
+        COMMAND mcpi_parity_reference_tests
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-basic.ref
+    )
+    add_test(
+        NAME parity_cli
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity_cli_tests.py
+                ${CMAKE_CURRENT_BINARY_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-basic.ref
+    )
+    add_test(NAME worldgen_parity COMMAND mcpi_worldgen_parity_tests)
+    add_test(NAME lighting_parity COMMAND mcpi_lighting_parity_tests)
+    add_test(NAME block_behavior COMMAND mcpi_block_behavior_tests)
+    add_test(NAME storage_parity COMMAND mcpi_storage_parity_tests)
+    add_test(NAME inventory COMMAND mcpi_inventory_tests)
+    add_test(NAME player_physics COMMAND mcpi_player_physics_tests)
+    add_test(NAME game_state_player COMMAND mcpi_game_state_player_tests)
+    add_test(NAME entity_system COMMAND mcpi_entity_system_tests)
+    add_test(NAME game_loop COMMAND mcpi_game_loop_tests)
+    add_test(NAME network_parity COMMAND mcpi_network_parity_tests)
+    add_test(
+        NAME api_transcript_parity
+        COMMAND mcpi_api_transcript_parity_tests
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-transcripts.ref
+    )
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_smoke.py
                 $<TARGET_FILE:mcpi_python_api_host>
+    )
+    add_test(
+        NAME python_api_compatibility
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_compatibility.py
+                $<TARGET_FILE:mcpi_python_compat_host>
+    )
+    add_test(
+        NAME python_examples_smoke
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_examples_smoke.py
+                $<TARGET_FILE:mcpi_python_compat_host>
     )
     add_test(
         NAME main_executable_smoke
@@ -153,8 +279,21 @@ if(MCPI_BUILD_TESTS)
                 $<TARGET_FILE:mcpi-recompiled>
     )
     add_test(
+        NAME java_api_surface
+        COMMAND ${Java_JAVA_EXECUTABLE}
+                -cp ${MCPI_JAVA_CLASSES_DIR}
+                pi.OriginalApiSurfaceSmoke
+    )
+    add_test(
         NAME release_workflow
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/release_workflow_tests.py
     )
+    add_test(
+        NAME reverse_engineering_docs
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/reverse_engineering_docs_tests.py
+    )
+
+    include(${CMAKE_CURRENT_SOURCE_DIR}/tests/Phase2Tests.cmake)
 endif()

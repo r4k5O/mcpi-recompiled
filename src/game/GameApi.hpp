@@ -41,6 +41,27 @@ public:
     virtual void set_player_position(const Vec3& position) = 0;
     [[nodiscard]] virtual IVec3 spawn_position() const = 0;
 
+    // Entity 0 is the local player compatibility baseline. Concrete game
+    // states can override these methods with a real registry while lightweight
+    // test bridges remain source-compatible.
+    [[nodiscard]] virtual std::vector<int> player_ids() const {
+        return {0};
+    }
+    [[nodiscard]] virtual bool entity_position(int id, Vec3& position) const {
+        if (id != 0) {
+            return false;
+        }
+        position = player_position();
+        return true;
+    }
+    virtual bool set_entity_position(int id, const Vec3& position) {
+        if (id != 0) {
+            return false;
+        }
+        set_player_position(position);
+        return true;
+    }
+
     [[nodiscard]] virtual int block_type(int x, int y, int z) const = 0;
     [[nodiscard]] virtual int block_data(int x, int y, int z) const = 0;
     virtual void set_block(int x, int y, int z, int block_type, int block_data) = 0;
@@ -57,6 +78,18 @@ public:
 
     virtual void set_camera_mode(CameraMode mode) = 0;
     virtual void set_camera_position(const Vec3& position) = 0;
+    [[nodiscard]] virtual CameraMode camera_mode() const noexcept {
+        return CameraMode::Normal;
+    }
+    [[nodiscard]] virtual Vec3 camera_position() const noexcept {
+        return {};
+    }
+    virtual void set_camera_target_entity(int id) {
+        (void)id;
+    }
+    [[nodiscard]] virtual int camera_target_entity() const noexcept {
+        return 0;
+    }
 
     [[nodiscard]] virtual std::vector<BlockHit> poll_block_hits() = 0;
     virtual void clear_events() = 0;

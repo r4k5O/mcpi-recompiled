@@ -1,0 +1,19 @@
+subsystem	symbol	rtti_name_va	typeinfo_va	vtable_va	first_virtual	evidence	confidence	summary
+app	NinecraftApp	0x102400	0x102410	0x1023b8	0x00014810	RTTI name plus Itanium typeinfo/vtable pointer structure; constructor candidate 0x000147b4 writes the same object vptr	confirmed	Top-level application class; spelling preserved exactly from the binary
+app	Minecraft	0x102748	0x102754	0x102700	0x000175bc	RTTI name plus Itanium typeinfo/vtable pointer structure in supplied ELF	confirmed	Core Minecraft game/application object anchor
+world	Level	0x10feec	0x10fef4	0x10fcf0	0x000a7624	RTTI name plus Itanium typeinfo/vtable pointer structure in supplied ELF	confirmed	World/level class anchor used to trace chunk lookup and storage ownership
+world	LevelChunk	0x1102f0	0x110300	0x110268	0x000b0d8c	RTTI/vtable structure plus independently mapped constructor family and 16x128x16 storage accesses	confirmed	Fixed-size chunk object; see levelchunk-layout.md for field evidence
+world	ChunkSource	0x10fcb6	0x10fc88	0x10fb88	0x000a8500	RTTI name plus Itanium base-type metadata and vtable structure	confirmed	Chunk provider base anchor
+world	ChunkCache	0x10fcc4	0x10fc90	0x10fbc0	0x000a8760	RTTI name plus Itanium typeinfo/vtable pointer structure	confirmed	Chunk caching/provider anchor
+world	RandomLevelSource	0x1105c4	0x1105d8	0x110598	0x000b4204	RTTI/typeinfo identifies ChunkSource ancestry; vtable structure independently resolved	confirmed	Primary terrain-generation target for Phase 2
+world	Dimension	0x1103a0	0x1103ac	0x110370	0x000b165c	RTTI name plus Itanium typeinfo/vtable pointer structure; nearby createRandomLevelSource text supports role	confirmed	Dimension object involved in RandomLevelSource creation
+storage	LevelStorage	0x1108d8	0x1108c8	0x110878	0x000b97d4	RTTI name plus Itanium typeinfo/vtable pointer structure	confirmed	World persistence abstraction anchor
+storage	ExternalFileLevelStorage	0x110969	0x110984	0x110900	0x000b865c	RTTI name plus derived-class typeinfo/vtable structure	confirmed	External-file persistence implementation anchor
+gameplay	Inventory	0x10de50	0x10de5c	0x10de18	0x0008d03c	RTTI name plus Itanium typeinfo/vtable pointer structure	confirmed	Inventory/hotbar reconstruction anchor
+gameplay	Entity	0x10a674	0x10a67c	0x10a548	0x0007a668	RTTI name plus Itanium typeinfo/vtable pointer structure	confirmed	Entity base-class reconstruction anchor
+render	LevelRenderer	0x107480	0x107490	0x107438	0x0004e534	RTTI name plus Itanium typeinfo/vtable pointer structure	confirmed	World/chunk renderer reconstruction anchor
+render	EntityRenderer	0x1075c0	0x1075b8	0x1075a8	0x0006035c	RTTI name plus Itanium typeinfo/vtable pointer structure	confirmed	Entity/camera rendering reconstruction anchor
+network	ClientSideNetworkHandler	0x108f98	0x108fb4	0x108eb8	0x0006e2f0	RTTI name plus Itanium typeinfo/vtable pointer structure and nearby handler diagnostic strings	confirmed	Client networking handler anchor
+network	ServerSideNetworkHandler	0x109ce4	0x109d00	0x109b98	0x00075368	RTTI name plus derived-class typeinfo/vtable structure	confirmed	Server networking handler anchor
+api	IPosTranslator	0x103884	0x103870	0x103838	0x00027bd0	RTTI name plus Itanium typeinfo/vtable pointer structure; API coordinate translation already independently mapped	confirmed	Position-translation interface used by MCPI API
+api	OffsetPosTranslator	0x103895	0x103878	0x103858	0x00027ce8	RTTI derived-type metadata plus vtable structure; behavior aligns with spawn offset observations	confirmed	Spawn-relative API/internal coordinate translator

@@ -37,6 +37,41 @@ The following remain reconstruction/parity work rather than being silently treat
 
 Those items are now easier to tackle because Phase 1 provides a tested executable, game state, chunk model, save lifecycle, API clients, and reverse-engineering evidence base.
 
+## Phase 2 — evidence-driven original-parity reconstruction ✅
+
+**Phase 2 implementation is complete.** The closure criteria and final verification policy are recorded in [`docs/phase2-completion.md`](docs/phase2-completion.md). Completion closes the planned reconstruction implementation; it does not promote unsupported original-behavior claims.
+
+Phase 2 deepens the reconstruction without converting unknown behavior into unsupported claims. The authoritative row-by-row status is [`docs/parity-status.md`](docs/parity-status.md).
+
+Implemented Phase-2 infrastructure and reconstruction includes:
+
+- differential/reference-vector parity tooling and reverse-engineering evidence contracts;
+- deeper world generation, lighting, block-update, storage, inventory, physics, entity and game-loop layers;
+- packet/network-handler boundaries while leaving original multiplayer reachability explicitly unresolved;
+- MCPI transcript classification for response / no-response / `Fail` behavior;
+- a broader independently written Java API surface packaged as `mcpi-java.jar`;
+- real `mcpi==1.2.1` Python compatibility and example smoke tests;
+- authoritative normal, third-person and fixed camera poses used by rendering and ray casting;
+- a safe local asset-source abstraction with traversal rejection and project-owned fallback data;
+- full visible voxel-face chunk meshes, metadata-dependent UV coordinates, light values, opaque/translucent separation, software depth testing, fog and selection outline;
+- title/game/pause state, an 848×480-reference HUD layout, chat lifetime handling and local positional sound lookup;
+- CI/build contracts for Linux, Windows, macOS and Linux ARM cross-build portability;
+- a cross-subsystem Phase-2 acceptance gate plus a parity-report contract that rejects unsupported `matched` rows.
+
+### What Phase 2 still does *not* claim
+
+A working reconstruction is not automatically an original match. In particular, the project still does **not** claim exact original terrain output, every original lighting/block table, original chunk persistence, exact movement constants, full entity AI, original multiplayer reachability, pixel-identical rendering/UI, exact sound event/mixing tables, or bug-for-bug coverage of every undocumented API edge. Those remain `partial`, `confirmed`, or `unknown` until evidence and comparison tests justify promotion.
+
+### Original Minecraft Pi assets
+
+This repository does **not** redistribute Mojang/Microsoft textures, sounds or packaged game data. If you already have an original Minecraft: Pi Edition installation, point the desktop client at a local asset directory:
+
+```bash
+./mcpi-recompiled --assets /path/to/your/minecraft-pi/assets
+```
+
+If the original archive is unpacked as a directory named `mcpi` in the current working directory, the loader detects `./mcpi` automatically. The loader only reads local files, rejects path traversal, never downloads assets, and falls back to project-owned/procedural data when an optional asset is unavailable. `MCPI_ASSETS` can also name a local asset root. Supplying original assets does not make unresolved renderer/audio behavior automatically `matched`.
+
 ## Releases
 
 The preferred release path is now entirely in GitHub:
@@ -71,24 +106,26 @@ Useful options:
 --headless            Run without a window
 --world <path>        World save path (default: world.mcpiworld)
 --seed <uint32>       Seed used when creating a new world
+--assets <path>       Local Minecraft Pi asset directory; never downloaded
 --help                Show usage
 ```
 
-Desktop controls in the Phase-1 client:
+Desktop controls:
 
-- `N` — create a new world from the menu
+- `N` — create a new world from the title screen
 - `L` — load the configured world
-- `Enter` — enter an already loaded world
+- `Enter` — continue an already loaded world / resume from pause
 - `WASD` — move
 - mouse — look
-- `Space` / `Ctrl` — move vertically in the current Phase-1 movement model
+- `Space` / `Ctrl` — move vertically in the current reconstructed movement model
 - `Shift` — faster movement
 - `1`–`9` — select hotbar slot
 - left mouse — break targeted block
 - right mouse — place selected block
 - `F5` — save
-- `F9` — reload
-- `Esc` — return to menu / exit
+- `F9` — reload while in game
+- `Esc` — pause; from the title screen, quit
+- `T` — from pause, return to the title screen
 
 The MCPI API server runs in the same process, including while the desktop client is active.
 
@@ -100,24 +137,15 @@ cmake --build build --config Release --parallel
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and a workflow contract that guards the maintained GitHub Action majors and semantic-release behavior used by CI/releases.
+Tests cover protocol/TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, worldgen/lighting/block/storage reconstruction, player/inventory/entities/game-loop/network boundaries, transcript parity, camera transforms, asset safety, chunk meshes, UI/audio contracts, Python and Java clients, platform build contracts, the main executable, release/reverse-engineering documentation contracts, and integrated Phase-1/Phase-2 acceptance gates.
+
+Additional native and cross-build recipes are documented in [`docs/platforms.md`](docs/platforms.md).
 
 ## Reconstruction approach
 
-The initial compatibility target is **Minecraft: Pi Edition 0.1.1 alpha**. Reverse-engineering notes live in `docs/reverse-engineering/` and keep confirmed observations separate from inference.
+The compatibility target is **Minecraft: Pi Edition 0.1.1 alpha**. Reverse-engineering notes live in `docs/reverse-engineering/` and keep confirmed observations separate from inference.
 
 The repository does not copy proprietary decompiler output. Observed layouts, constants, addresses, behavior, and compatibility tests are used to drive independently written source code.
-
-## Next reconstruction work
-
-With Phase 1's functional surface established, subsequent work can focus on deeper original parity:
-
-1. reconstruct `Level -> ChunkSource -> LevelChunk` behavior in more detail;
-2. reproduce original `RandomLevelSource` generation from binary evidence;
-3. reconstruct light propagation and block-update behavior;
-4. deepen player physics, collision, inventory and entity behavior;
-5. improve rendering/UI fidelity without redistributing original assets;
-6. extend additional modern platform targets only after the compatibility behavior is stable.
 
 Gameplay modernization remains separate from original-parity work.
 

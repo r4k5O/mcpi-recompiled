@@ -96,6 +96,57 @@ int World::height_at(int x, int z) const noexcept {
     return found->second.height_at(local_coordinate(x), local_coordinate(z));
 }
 
+std::uint8_t World::sky_light_at(const BlockPos& position) const noexcept {
+    if (position.y < 0 || position.y >= Chunk::height) {
+        return 0U;
+    }
+    const auto found = chunks_.find(chunk_position(position));
+    if (found == chunks_.end()) {
+        return 0U;
+    }
+    return found->second.sky_light_at(local_position(position));
+}
+
+std::uint8_t World::block_light_at(const BlockPos& position) const noexcept {
+    if (position.y < 0 || position.y >= Chunk::height) {
+        return 0U;
+    }
+    const auto found = chunks_.find(chunk_position(position));
+    if (found == chunks_.end()) {
+        return 0U;
+    }
+    return found->second.block_light_at(local_position(position));
+}
+
+void World::set_sky_light(const BlockPos& position, std::uint8_t light) noexcept {
+    if (position.y < 0 || position.y >= Chunk::height) {
+        return;
+    }
+    const auto found = chunks_.find(chunk_position(position));
+    if (found == chunks_.end()) {
+        return;
+    }
+    found->second.set_sky_light(local_position(position), light);
+}
+
+void World::set_block_light(const BlockPos& position, std::uint8_t light) noexcept {
+    if (position.y < 0 || position.y >= Chunk::height) {
+        return;
+    }
+    const auto found = chunks_.find(chunk_position(position));
+    if (found == chunks_.end()) {
+        return;
+    }
+    found->second.set_block_light(local_position(position), light);
+}
+
+bool World::has_chunk_at(const BlockPos& position) const noexcept {
+    if (position.y < 0 || position.y >= Chunk::height) {
+        return false;
+    }
+    return chunks_.find(chunk_position(position)) != chunks_.end();
+}
+
 std::size_t World::chunk_count() const noexcept {
     return chunks_.size();
 }
@@ -106,6 +157,13 @@ void World::clear() noexcept {
 
 void World::for_each_chunk(const std::function<void(const Chunk&)>& visitor) const {
     for (const auto& [position, chunk] : chunks_) {
+        (void)position;
+        visitor(chunk);
+    }
+}
+
+void World::for_each_chunk_mutable(const std::function<void(Chunk&)>& visitor) {
+    for (auto& [position, chunk] : chunks_) {
         (void)position;
         visitor(chunk);
     }

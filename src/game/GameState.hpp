@@ -1,9 +1,13 @@
 #pragma once
 
+#include "game/EntityRegistry.hpp"
 #include "game/GameApi.hpp"
+#include "game/Player.hpp"
+#include "world/BlockBehavior.hpp"
+#include "world/LightEngine.hpp"
 #include "world/World.hpp"
 
-#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -21,7 +25,7 @@ public:
     static constexpr int world_max_y = 127;
     static constexpr int world_min_z = 0;
     static constexpr int world_max_z = 255;
-    static constexpr int hotbar_size = 9;
+    static constexpr int hotbar_size = Inventory::hotbar_size;
 
     GameState();
 
@@ -31,11 +35,19 @@ public:
     [[nodiscard]] std::uint32_t seed() const noexcept;
     [[nodiscard]] bool generated_world() const noexcept;
 
+    [[nodiscard]] Player& player() noexcept;
+    [[nodiscard]] const Player& player() const noexcept;
+    [[nodiscard]] EntityRegistry& entities() noexcept;
+    [[nodiscard]] const EntityRegistry& entities() const noexcept;
     [[nodiscard]] Vec3 player_position() const override;
     void set_player_position(const Vec3& position) override;
     void move_player(const Vec3& delta) noexcept;
     [[nodiscard]] IVec3 spawn_position() const override;
     void set_spawn_position(const IVec3& position) noexcept;
+
+    [[nodiscard]] std::vector<int> player_ids() const override;
+    [[nodiscard]] bool entity_position(int id, Vec3& position) const override;
+    bool set_entity_position(int id, const Vec3& position) override;
 
     [[nodiscard]] int block_type(int x, int y, int z) const override;
     [[nodiscard]] int block_data(int x, int y, int z) const override;
@@ -45,6 +57,8 @@ public:
                     int block_type, int block_data) override;
     [[nodiscard]] int height_at(int x, int z) const override;
 
+    [[nodiscard]] Inventory& inventory() noexcept;
+    [[nodiscard]] const Inventory& inventory() const noexcept;
     [[nodiscard]] int selected_hotbar_slot() const noexcept;
     void select_hotbar_slot(int slot) noexcept;
     [[nodiscard]] int hotbar_block(int slot) const noexcept;
@@ -52,6 +66,9 @@ public:
     [[nodiscard]] int selected_block() const noexcept;
     void place_selected_block(int x, int y, int z);
     void break_block(int x, int y, int z);
+
+    [[nodiscard]] std::size_t scheduled_block_tick_count() const noexcept;
+    bool deliver_scheduled_block_tick(world::BlockPos& position) noexcept;
 
     void save_checkpoint() override;
     void restore_checkpoint() override;
@@ -63,8 +80,10 @@ public:
 
     void set_camera_mode(CameraMode mode) override;
     void set_camera_position(const Vec3& position) override;
-    [[nodiscard]] CameraMode camera_mode() const noexcept;
-    [[nodiscard]] Vec3 camera_position() const noexcept;
+    [[nodiscard]] CameraMode camera_mode() const noexcept override;
+    [[nodiscard]] Vec3 camera_position() const noexcept override;
+    void set_camera_target_entity(int id) override { camera_target_entity_id_ = id; }
+    [[nodiscard]] int camera_target_entity() const noexcept override { return camera_target_entity_id_; }
 
     [[nodiscard]] std::vector<BlockHit> poll_block_hits() override;
     void clear_events() override;
@@ -91,16 +110,18 @@ private:
     std::uint32_t seed_ = 0;
     bool generated_world_ = false;
     IVec3 spawn_position_{128, 64, 128};
-    Vec3 player_position_{128.0, 64.0, 128.0};
+    Player player_{0};
+    EntityRegistry entities_;
     world::World world_;
+    world::LightEngine light_engine_;
+    world::BlockUpdateEngine block_updates_;
     std::unordered_map<std::uint32_t, world::BlockState> changes_;
-    std::array<int, hotbar_size> hotbar_{};
-    int selected_hotbar_slot_ = 0;
     std::optional<Checkpoint> checkpoint_;
     std::unordered_map<std::string, bool> world_settings_;
     std::unordered_map<std::string, bool> player_settings_;
     CameraMode camera_mode_ = CameraMode::Normal;
     Vec3 camera_position_{128.0, 64.0, 128.0};
+    int camera_target_entity_id_ = 0;
     std::vector<BlockHit> block_hits_;
     std::vector<std::string> chat_messages_;
 };

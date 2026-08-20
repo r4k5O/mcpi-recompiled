@@ -40,6 +40,18 @@ std::optional<Command> parse_command(std::string_view line) {
     }
 
     const std::string_view body = std::string_view(cleaned).substr(open + 1, close - open - 1);
+
+    // chat.post's payload is free text. Commas and parentheses inside the
+    // already-delimited body belong to the message instead of creating MCPI
+    // arguments. Keeping this rule here also prevents higher layers from
+    // needing command-specific string reassembly.
+    if (command.name == "chat.post") {
+        if (!body.empty()) {
+            command.arguments.push_back(trim(body));
+        }
+        return command;
+    }
+
     std::size_t start = 0;
     while (start <= body.size()) {
         const auto comma = body.find(',', start);
