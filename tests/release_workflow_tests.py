@@ -79,18 +79,33 @@ def main() -> int:
     for label, fragment in release_fragments.items():
         require_fragment(release, fragment, label)
 
+    build_fragments = {
+        "CI ARM full-client job": "arm-build:",
+        "CI ARM QEMU setup": "docker/setup-qemu-action@v4",
+        "CI ARM QEMU platforms": "platforms: arm64,arm",
+        "CI ARM stable runner": "runs-on: ubuntu-22.04",
+        "CI ARM64 Docker platform": "docker_platform: linux/arm64",
+        "CI ARM32 Docker platform": "docker_platform: linux/arm/v7",
+        "CI ARM client enabled": "-DMCPI_BUILD_CLIENT=ON",
+        "CI ARM executable check": "file build-arm/mcpi-recompiled",
+    }
+
+    for label, fragment in build_fragments.items():
+        require_fragment(build, fragment, label)
+
     # Manual releases must not publish a tag until build/test/package jobs have passed.
     require('git tag -a "$tag"' not in release, "prepare must not create the release tag")
     require('git push origin "$tag"' not in release, "prepare must not push the release tag")
     require("| head -n1" not in release, "tag discovery must not depend on a pipefail-sensitive head pipeline")
 
-    # ARM release jobs must build the real SDL client, not the old core-only smoke target.
-    require("cross-build:" not in release, "release workflow must replace ARM core-only cross-build with full client builds")
-    require("-DMCPI_BUILD_CLIENT=OFF" not in release, "release ARM builds must not disable the client")
-    require("cmake/toolchains/linux-arm64.cmake" not in release,
-            "release ARM64 build must use a native ARM userland rather than the core-only cross toolchain")
-    require("cmake/toolchains/linux-arm32.cmake" not in release,
-            "release ARM32 build must use a native ARM userland rather than the core-only cross toolchain")
+    # ARM release and CI jobs must build the real SDL client, not the old core-only smoke target.
+    for workflow_name, text in (("build", build), ("release", release)):
+        require("cross-build:" not in text, f"{workflow_name} workflow must replace ARM core-only cross-build with full client builds")
+        require("-DMCPI_BUILD_CLIENT=OFF" not in text, f"{workflow_name} ARM builds must not disable the client")
+        require("cmake/toolchains/linux-arm64.cmake" not in text,
+                f"{workflow_name} ARM64 build must use a native ARM userland rather than the core-only cross toolchain")
+        require("cmake/toolchains/linux-arm32.cmake" not in text,
+                f"{workflow_name} ARM32 build must use a native ARM userland rather than the core-only cross toolchain")
 
     # Keep GitHub-hosted workflows on maintained Node 24-era action majors.
     for workflow_name, text in (("build", build), ("release", release)):
@@ -110,7 +125,7 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with six full native client release packages, including ARM64 and ARM32.")
+    print("GitHub workflow/release contract passed with six full client platform builds, including ARM64 and ARM32.")
     return 0
 
 
