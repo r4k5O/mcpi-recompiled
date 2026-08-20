@@ -47,6 +47,7 @@ public:
     void set_sky_light(const LocalBlockPos& position, std::uint8_t light) noexcept;
     [[nodiscard]] std::uint8_t block_light_at(const LocalBlockPos& position) const noexcept;
     void set_block_light(const LocalBlockPos& position, std::uint8_t light) noexcept;
+    void clear_lighting() noexcept;
 
     [[nodiscard]] int height_at(int local_x, int local_z) const noexcept;
     [[nodiscard]] bool empty() const noexcept;
