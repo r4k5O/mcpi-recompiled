@@ -39,7 +39,16 @@ Those items are now easier to tackle because Phase 1 provides a tested executabl
 
 ## Releases
 
-Version tags matching `v*` are built and tested automatically on Linux x86-64 and Windows x86-64 before a GitHub Release is published. Release assets include platform archives and `SHA256SUMS.txt`; release notes are generated automatically.
+The preferred release path is now entirely in GitHub:
+
+1. open **Actions → Release → Run workflow**;
+2. choose `patch`, `minor`, `major`, or `custom`;
+3. for `custom`, enter a version such as `0.2.5` or `v0.2.5`;
+4. run the workflow.
+
+The workflow reads the newest `vMAJOR.MINOR.PATCH` tag, computes the requested next version, creates the annotated tag on `main`, builds and tests Linux x86-64 and Windows x86-64, packages both platforms, generates `SHA256SUMS.txt`, and publishes the GitHub Release. Release runs are serialized so two simultaneous manual releases cannot race for the same next version.
+
+Manually pushed `v*` tags remain supported as an alternative. Release assets include `README.md`, `LICENSE`, `NOTICE`, and `LEGAL.md` alongside the executable. Release notes are generated automatically.
 
 The release workflows deliberately use maintained GitHub Action majors. CI also installs the Linux SDL development dependencies needed by the enabled backends, and project warnings are fixed in source rather than hidden by weaker compiler flags.
 
@@ -91,7 +100,7 @@ cmake --build build --config Release --parallel
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and a workflow contract that guards the maintained GitHub Action majors used by CI/releases.
+Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and a workflow contract that guards the maintained GitHub Action majors and semantic-release behavior used by CI/releases.
 
 ## Reconstruction approach
 
