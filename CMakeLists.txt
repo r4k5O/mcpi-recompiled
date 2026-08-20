@@ -129,6 +129,9 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_worldgen_parity_tests tests/worldgen_parity_tests.cpp)
     target_link_libraries(mcpi_worldgen_parity_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_lighting_parity_tests tests/lighting_parity_tests.cpp)
+    target_link_libraries(mcpi_lighting_parity_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
 
@@ -169,6 +172,7 @@ if(MCPI_BUILD_TESTS)
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/parity/reference/api-basic.ref
     )
     add_test(NAME worldgen_parity COMMAND mcpi_worldgen_parity_tests)
+    add_test(NAME lighting_parity COMMAND mcpi_lighting_parity_tests)
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
