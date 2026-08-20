@@ -82,6 +82,10 @@ def main() -> int:
 
     worldgen_reference = WORLDGEN_REFERENCE.read_text(encoding="utf-8")
     for required in (
+        "name=randomlevelsource-cache-path",
+        "expected=chunk-coordinates-combined-into-cache-key=true;embedded-cache-search=true",
+        "name=randomlevelsource-constructor-candidate",
+        "expected=candidate=0x000b4424;writes-vptr=0x00110598;large-subobjects-initialized=true",
         "name=randomlevelsource-levelchunk-construction",
         "expected=constructor=0x000b0a34;same-chunk-coordinates=true",
         "name=randomlevelsource-terrain-stage-calls",
