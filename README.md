@@ -37,6 +37,16 @@ The following remain reconstruction/parity work rather than being silently treat
 
 Those items are now easier to tackle because Phase 1 provides a tested executable, game state, chunk model, save lifecycle, API clients, and reverse-engineering evidence base.
 
+## Releases
+
+Version tags matching `v*` are built and tested automatically on Linux x86-64 and Windows x86-64 before a GitHub Release is published. Release assets include platform archives and `SHA256SUMS.txt`; release notes are generated automatically.
+
+The release workflows deliberately use maintained GitHub Action majors (`checkout@v7`, `setup-java@v5`, `upload-artifact@v7`, `download-artifact@v8`) and `softprops/action-gh-release@v3`.
+
+The intended first public release is **`v0.1.0`**, representing the completed Phase-1 functional baseline. It is also the recommended fork point for projects that want to modernize gameplay, visuals, UI, or other behavior separately from this repository's original-parity work.
+
+The project code license must be documented before that first public release is tagged.
+
 ## Run
 
 A normal build starts the desktop client:
@@ -81,21 +91,7 @@ cmake --build build --config Release --parallel
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and the GitHub Release workflow contract.
-
-## Releases
-
-GitHub Releases are produced automatically from version tags matching `v*` once the release workflow is present on the default branch.
-
-For each version tag the release pipeline:
-
-1. builds the native client on **Linux x86-64** and **Windows x86-64**;
-2. runs the full CTest compatibility suite on both platforms;
-3. packages `mcpi-recompiled-<tag>-linux-x86_64.tar.gz` and `mcpi-recompiled-<tag>-windows-x86_64.zip`;
-4. generates `SHA256SUMS.txt` covering both archives;
-5. publishes a GitHub Release with generated release notes only after both platform jobs succeed.
-
-The intended first stable tag is **`v0.1.0`**, representing the Phase-1 functional compatibility baseline. It is also the recommended branch/fork point for work that intentionally modernizes gameplay separately from the original-parity reconstruction line.
+Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and a workflow contract that guards the maintained GitHub Action majors used by CI/releases.
 
 ## Reconstruction approach
 
