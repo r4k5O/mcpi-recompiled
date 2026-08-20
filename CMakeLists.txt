@@ -21,6 +21,7 @@ add_library(mcpi_core
     src/api/Command.cpp
     src/game/GameState.cpp
     src/parity/ReferenceCase.cpp
+    src/parity/ReferenceSuite.cpp
     src/world/Chunk.cpp
     src/world/World.cpp
     src/world/WorldGenerator.cpp
