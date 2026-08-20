@@ -20,6 +20,18 @@ expected=0x07ebe2d5*chunkZ+0x14609048*chunkX
 ---
 reference_build=mcpi-0.1.1
 subsystem=worldgen
+name=randomlevelsource-cache-path
+input=RandomLevelSource candidate 0x000b46fc chunk lookup/cache path
+expected=chunk-coordinates-combined-into-cache-key=true;embedded-cache-search=true
+---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=randomlevelsource-constructor-candidate
+input=RandomLevelSource constructor candidate structural initialization
+expected=candidate=0x000b4424;writes-vptr=0x00110598;large-subobjects-initialized=true
+---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
 name=randomlevelsource-levelchunk-construction
 input=RandomLevelSource candidate 0x000b46fc cache-miss LevelChunk construction
 expected=constructor=0x000b0a34;same-chunk-coordinates=true
