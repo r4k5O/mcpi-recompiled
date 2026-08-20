@@ -157,6 +157,9 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_game_state_player_tests tests/game_state_player_tests.cpp)
     target_link_libraries(mcpi_game_state_player_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_entity_system_tests tests/entity_system_tests.cpp)
+    target_link_libraries(mcpi_entity_system_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
 
@@ -203,6 +206,7 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME inventory COMMAND mcpi_inventory_tests)
     add_test(NAME player_physics COMMAND mcpi_player_physics_tests)
     add_test(NAME game_state_player COMMAND mcpi_game_state_player_tests)
+    add_test(NAME entity_system COMMAND mcpi_entity_system_tests)
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
