@@ -18,3 +18,21 @@ name=randomlevelsource-chunk-coordinate-mix
 input=RandomLevelSource candidate 0x000b46fc chunk-dependent pre-RNG value
 expected=0x07ebe2d5*chunkZ+0x14609048*chunkX
 ---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=randomlevelsource-levelchunk-construction
+input=RandomLevelSource candidate 0x000b46fc cache-miss LevelChunk construction
+expected=constructor=0x000b0a34;same-chunk-coordinates=true
+---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=randomlevelsource-terrain-stage-calls
+input=RandomLevelSource candidate 0x000b46fc terrain-generation calls
+expected=0x000b3b54;0x000b32ec;same-block-buffer=true;same-chunk-coordinates=true
+---
+reference_build=mcpi-0.1.1
+subsystem=worldgen
+name=randomlevelsource-post-generation-virtual
+input=RandomLevelSource candidate 0x000b46fc post-generation LevelChunk virtual
+expected=LevelChunk-vtable-offset=0x10
+---
