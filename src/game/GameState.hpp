@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/EntityRegistry.hpp"
 #include "game/GameApi.hpp"
 #include "game/Player.hpp"
 #include "world/BlockBehavior.hpp"
@@ -35,11 +36,17 @@ public:
 
     [[nodiscard]] Player& player() noexcept;
     [[nodiscard]] const Player& player() const noexcept;
+    [[nodiscard]] EntityRegistry& entities() noexcept;
+    [[nodiscard]] const EntityRegistry& entities() const noexcept;
     [[nodiscard]] Vec3 player_position() const override;
     void set_player_position(const Vec3& position) override;
     void move_player(const Vec3& delta) noexcept;
     [[nodiscard]] IVec3 spawn_position() const override;
     void set_spawn_position(const IVec3& position) noexcept;
+
+    [[nodiscard]] std::vector<int> player_ids() const override;
+    [[nodiscard]] bool entity_position(int id, Vec3& position) const override;
+    bool set_entity_position(int id, const Vec3& position) override;
 
     [[nodiscard]] int block_type(int x, int y, int z) const override;
     [[nodiscard]] int block_data(int x, int y, int z) const override;
@@ -98,6 +105,7 @@ private:
     bool generated_world_ = false;
     IVec3 spawn_position_{128, 64, 128};
     Player player_{0};
+    EntityRegistry entities_;
     world::World world_;
     world::LightEngine light_engine_;
     world::BlockUpdateEngine block_updates_;
