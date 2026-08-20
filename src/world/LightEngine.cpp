@@ -1,5 +1,7 @@
 #include "world/LightEngine.hpp"
 
+#include "world/BlockBehavior.hpp"
+
 #include <algorithm>
 #include <array>
 #include <queue>
@@ -27,40 +29,13 @@ BlockPos add(const BlockPos& position, const BlockPos& delta) noexcept {
 } // namespace
 
 std::uint8_t LightEngine::emission_for(const BlockState& block) noexcept {
-    switch (block.id) {
-    case 10: // flowing lava
-    case 11: // still lava
-    case 51: // fire
-    case 89: // glowstone
-    case 91: // jack o'lantern
-        return 15U;
-    case 50: // torch
-        return 14U;
-    default:
-        return 0U;
-    }
+    const int emission = BlockBehaviorRegistry::behavior(block.id).emission;
+    return static_cast<std::uint8_t>(std::clamp(emission, 0, 15));
 }
 
 std::uint8_t LightEngine::opacity_for(const BlockState& block) noexcept {
-    switch (block.id) {
-    case 0:  // air
-    case 6:  // sapling
-    case 20: // glass
-    case 37: // yellow flower
-    case 38: // cyan flower
-    case 39: // brown mushroom
-    case 40: // red mushroom
-    case 50: // torch
-    case 51: // fire
-        return 0U;
-    case 8:  // flowing water
-    case 9:  // still water
-        return 2U;
-    case 18: // leaves
-        return 1U;
-    default:
-        return 15U;
-    }
+    const int opacity = BlockBehaviorRegistry::behavior(block.id).opacity;
+    return static_cast<std::uint8_t>(std::clamp(opacity, 0, 15));
 }
 
 void LightEngine::rebuild(World& world) const {
