@@ -41,7 +41,7 @@ Those items are now easier to tackle because Phase 1 provides a tested executabl
 
 Version tags matching `v*` are built and tested automatically on Linux x86-64 and Windows x86-64 before a GitHub Release is published. Release assets include platform archives and `SHA256SUMS.txt`; release notes are generated automatically.
 
-The release workflows deliberately use maintained GitHub Action majors (`checkout@v7`, `setup-java@v5`, `upload-artifact@v7`, `download-artifact@v8`) and `softprops/action-gh-release@v3`. CI also installs the Linux SDL development dependencies needed by the enabled backends, and project warnings are fixed in source rather than hidden by weaker compiler flags.
+The release workflows deliberately use maintained GitHub Action majors. CI also installs the Linux SDL development dependencies needed by the enabled backends, and project warnings are fixed in source rather than hidden by weaker compiler flags.
 
 The intended first public release is **`v0.1.0`**, representing the completed Phase-1 functional baseline. It is also the recommended fork point for projects that want to modernize gameplay, visuals, UI, or other behavior separately from this repository's original-parity work.
 
