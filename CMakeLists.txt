@@ -181,6 +181,7 @@ if(MCPI_BUILD_TESTS)
         ${CMAKE_CURRENT_SOURCE_DIR}/clients/java/src/*.java
     )
     set(MCPI_JAVA_CLASSES_DIR ${CMAKE_CURRENT_BINARY_DIR}/java-classes)
+    set(MCPI_JAVA_JAR ${CMAKE_CURRENT_BINARY_DIR}/mcpi-java.jar)
     add_custom_target(mcpi_java_client ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${MCPI_JAVA_CLASSES_DIR}
         COMMAND ${Java_JAVAC_EXECUTABLE}
@@ -196,6 +197,15 @@ if(MCPI_BUILD_TESTS)
         COMMENT "Compiling Minecraft Pi Java compatibility client"
         VERBATIM
     )
+    add_custom_command(
+        OUTPUT ${MCPI_JAVA_JAR}
+        COMMAND ${Java_JAR_EXECUTABLE} --create --file ${MCPI_JAVA_JAR}
+                -C ${MCPI_JAVA_CLASSES_DIR} pi
+        DEPENDS mcpi_java_client
+        COMMENT "Packaging Minecraft Pi Java compatibility JAR"
+        VERBATIM
+    )
+    add_custom_target(mcpi_java_jar ALL DEPENDS ${MCPI_JAVA_JAR})
 
     add_test(NAME protocol COMMAND mcpi_protocol_tests)
     add_test(NAME api_server COMMAND mcpi_api_server_tests)
@@ -250,6 +260,12 @@ if(MCPI_BUILD_TESTS)
                 -cp ${MCPI_JAVA_CLASSES_DIR}
                 JavaApiSmoke
                 $<TARGET_FILE:mcpi-recompiled>
+    )
+    add_test(
+        NAME java_api_surface
+        COMMAND ${Java_JAVA_EXECUTABLE}
+                -cp ${MCPI_JAVA_CLASSES_DIR}
+                pi.OriginalApiSurfaceSmoke
     )
     add_test(
         NAME release_workflow
