@@ -31,14 +31,12 @@ int main() {
     using mcpi::game::Aabb;
     using mcpi::game::Physics;
     using mcpi::game::Player;
-    using mcpi::game::Vec3;
     using mcpi::game::Velocity;
     using mcpi::world::World;
 
     World world;
     make_floor(world, 0, 0, 10, 0, 10);
 
-    // Feet-position semantics: a player standing on a y=0 full cube has y=1.
     Player floor_player;
     floor_player.set_position({2.5, 3.0, 2.5});
     Physics::move(world, floor_player, {0.0, -10.0, 0.0});
@@ -46,7 +44,6 @@ int main() {
     assert(floor_player.on_ground());
     assert(!Physics::intersects_solid(world, floor_player.bounds()));
 
-    // Horizontal collision must stop the 0.6-wide player before a full wall.
     set_solid(world, 4, 1, 2);
     set_solid(world, 4, 2, 2);
     Player wall_player;
@@ -55,7 +52,6 @@ int main() {
     assert(close(wall_player.position().x, 3.7));
     assert(!Physics::intersects_solid(world, wall_player.bounds()));
 
-    // Ceiling collision clamps the player's 1.8-high AABB below the block.
     set_solid(world, 6, 3, 6);
     Player ceiling_player;
     ceiling_player.set_position({6.5, 1.0, 6.5});
@@ -63,7 +59,6 @@ int main() {
     assert(close(ceiling_player.position().y, 1.2));
     assert(!Physics::intersects_solid(world, ceiling_player.bounds()));
 
-    // Finite-world bounds apply to the whole AABB, not only its center point.
     Player edge_player;
     edge_player.set_position({1.0, 10.0, 1.0});
     Physics::move(world, edge_player, {-100.0, 0.0, -100.0});
@@ -73,7 +68,6 @@ int main() {
     assert(edge_player.position().x <= 256.0 - Player::half_width);
     assert(edge_player.position().z <= 256.0 - Player::half_width);
 
-    // Gravity is deterministic and eventually lands without penetrating floor.
     Player falling;
     falling.set_position({8.5, 8.0, 8.5});
     const double initial_y = falling.position().y;
@@ -87,7 +81,6 @@ int main() {
     assert(close(falling.velocity().y, 0.0));
     assert(!Physics::intersects_solid(world, falling.bounds()));
 
-    // Jumping is only effective from the ground and must land again.
     falling.jump();
     Physics::tick_player(world, falling);
     assert(falling.position().y > 1.0);
@@ -98,7 +91,6 @@ int main() {
     assert(falling.on_ground());
     assert(close(falling.position().y, 1.0));
 
-    // Repeated movement into a wall must never accumulate penetration drift.
     Player repeated;
     repeated.set_position({2.5, 1.0, 2.5});
     for (int step = 0; step < 100; ++step) {
@@ -107,9 +99,9 @@ int main() {
     }
     assert(close(repeated.position().x, 3.7));
 
-    // Basic entity state remains explicit and independently testable.
-    repeated.set_velocity(Velocity{1.0, 2.0, 3.0});
-    assert(repeated.velocity() == Velocity{1.0, 2.0, 3.0});
+    const Velocity expected_velocity{1.0, 2.0, 3.0};
+    repeated.set_velocity(expected_velocity);
+    assert(repeated.velocity() == expected_velocity);
     const Aabb bounds = repeated.bounds();
     assert(close(bounds.max.x - bounds.min.x, Player::half_width * 2.0));
     assert(close(bounds.max.y - bounds.min.y, Player::height));
