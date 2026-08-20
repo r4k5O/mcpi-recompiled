@@ -48,8 +48,18 @@ def main() -> int:
         "build prepared source checkout": "ref: ${{ needs.prepare.outputs.source_sha }}",
         "Linux release runner": "ubuntu-latest",
         "Windows release runner": "windows-latest",
+        "macOS ARM64 release runner": "macos-latest",
+        "macOS x86-64 release runner": "macos-15-intel",
+        "macOS ARM64 artifact": "release-macos-arm64",
+        "macOS x86-64 artifact": "release-macos-x86_64",
         "Linux archive": "linux-x86_64.tar.gz",
         "Windows archive": "windows-x86_64.zip",
+        "macOS ARM64 archive": "macos-arm64.tar.gz",
+        "macOS x86-64 archive": "macos-x86_64.tar.gz",
+        "ARM cross-build job": "cross-build:",
+        "ARM64 toolchain": "cmake/toolchains/linux-arm64.cmake",
+        "ARM32 toolchain": "cmake/toolchains/linux-arm32.cmake",
+        "publish waits for cross-build": "- cross-build",
         "checksums": "SHA256SUMS.txt",
         "generated notes": "generate_release_notes: true",
         "explicit release tag": "tag_name: ${{ needs.prepare.outputs.tag }}",
@@ -63,6 +73,12 @@ def main() -> int:
     require('git tag -a "$tag"' not in release, "prepare must not create the release tag")
     require('git push origin "$tag"' not in release, "prepare must not push the release tag")
     require("| head -n1" not in release, "tag discovery must not depend on a pipefail-sensitive head pipeline")
+
+    # ARM is cross-build-only until native/runtime evidence exists; do not publish it as a full client package.
+    require("mcpi-recompiled-${{ needs.prepare.outputs.tag }}-linux-arm64" not in release,
+            "ARM64 cross-build must not be published as a full native client")
+    require("mcpi-recompiled-${{ needs.prepare.outputs.tag }}-linux-arm32" not in release,
+            "ARM32 cross-build must not be published as a full native client")
 
     # Keep GitHub-hosted workflows on maintained Node 24-era action majors.
     for workflow_name, text in (("build", build), ("release", release)):
@@ -82,7 +98,7 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with post-build tag publication and maintained actions.")
+    print("GitHub workflow/release contract passed with all Phase 2 builds and four native release packages.")
     return 0
 
 
