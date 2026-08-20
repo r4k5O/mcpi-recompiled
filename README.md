@@ -37,7 +37,9 @@ The following remain reconstruction/parity work rather than being silently treat
 
 Those items are now easier to tackle because Phase 1 provides a tested executable, game state, chunk model, save lifecycle, API clients, and reverse-engineering evidence base.
 
-## Phase 2 — evidence-driven original-parity reconstruction
+## Phase 2 — evidence-driven original-parity reconstruction ✅
+
+**Phase 2 implementation is complete.** The closure criteria and final verification policy are recorded in [`docs/phase2-completion.md`](docs/phase2-completion.md). Completion closes the planned reconstruction implementation; it does not promote unsupported original-behavior claims.
 
 Phase 2 deepens the reconstruction without converting unknown behavior into unsupported claims. The authoritative row-by-row status is [`docs/parity-status.md`](docs/parity-status.md).
 
