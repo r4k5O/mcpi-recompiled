@@ -5,9 +5,15 @@ namespace {
 
 constexpr BlockBehavior inert_solid{15, 0, true, false, false};
 constexpr BlockBehavior air{0, 0, false, true, false};
+constexpr BlockBehavior transparent_plant{0, 0, false, true, false};
 constexpr BlockBehavior glass{0, 0, true, false, false};
+constexpr BlockBehavior leaves{1, 0, true, false, false};
 constexpr BlockBehavior water{2, 0, false, true, true};
+constexpr BlockBehavior lava{15, 15, false, true, true};
+constexpr BlockBehavior torch{0, 14, false, false, false};
+constexpr BlockBehavior fire{0, 15, false, true, true};
 constexpr BlockBehavior glowstone{15, 15, true, false, false};
+constexpr BlockBehavior jack_o_lantern{15, 15, true, false, false};
 
 } // namespace
 
@@ -15,13 +21,30 @@ const BlockBehavior& BlockBehaviorRegistry::behavior(int block_id) noexcept {
     switch (block_id) {
     case 0:
         return air;
+    case 6:
+    case 37:
+    case 38:
+    case 39:
+    case 40:
+        return transparent_plant;
     case 8:
     case 9:
         return water;
+    case 10:
+    case 11:
+        return lava;
+    case 18:
+        return leaves;
     case 20:
         return glass;
+    case 50:
+        return torch;
+    case 51:
+        return fire;
     case 89:
         return glowstone;
+    case 91:
+        return jack_o_lantern;
     default:
         return inert_solid;
     }
@@ -33,7 +56,6 @@ void BlockUpdateEngine::on_block_changed(
     const BlockState& before,
     const BlockState& after) {
     (void)world;
-    (void)position;
 
     if (before == after) {
         return;
