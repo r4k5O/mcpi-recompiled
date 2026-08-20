@@ -1,6 +1,7 @@
 #pragma once
 
 #include "api/Command.hpp"
+#include "api/CommandResult.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -13,6 +14,7 @@ namespace mcpi::api {
 class ApiServer {
 public:
     using Handler = std::function<std::optional<std::string>(const Command&)>;
+    using ResultHandler = std::function<CommandResult(const Command&)>;
 
     explicit ApiServer(std::uint16_t port = 4711);
     ~ApiServer();
@@ -23,6 +25,7 @@ public:
     ApiServer& operator=(ApiServer&&) = delete;
 
     bool start(Handler handler);
+    bool start(ResultHandler handler);
     void stop();
 
     [[nodiscard]] bool running() const noexcept;
