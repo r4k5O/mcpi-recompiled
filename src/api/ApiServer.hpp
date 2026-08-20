@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace mcpi::api {
 
@@ -25,7 +26,14 @@ public:
     ApiServer& operator=(ApiServer&&) = delete;
 
     bool start(Handler handler);
-    bool start(ResultHandler handler);
+    bool start(ResultHandler handler) {
+        if (!handler) {
+            return false;
+        }
+        return start(Handler([classified = std::move(handler)](const Command& command) mutable {
+            return classified(command).wire_response();
+        }));
+    }
     void stop();
 
     [[nodiscard]] bool running() const noexcept;
