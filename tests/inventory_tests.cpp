@@ -39,25 +39,23 @@ int main() {
     assert(game.block_type(20, 100, 20) == 57);
     assert(game.block_data(20, 100, 20) == 6);
 
-    // Compatibility accessors continue to expose the selected block id.
     assert(game.hotbar_block(3) == 57);
     game.set_hotbar_block(3, 41);
     assert(game.inventory().slot(3).item_id == 41);
     assert(game.inventory().slot(3).count == 1);
     assert(game.inventory().slot(3).data == 0);
 
-    // The project-owned legacy migration format must preserve full stacks
-    // while remaining readable through the common storage router.
     const auto path = std::filesystem::temp_directory_path() /
                       "mcpi-recompiled-inventory.mcpiworld";
     std::filesystem::remove(path);
-    game.inventory().slot(4) = ItemStack{45, 23, 2};
+    const ItemStack persisted{45, 23, 2};
+    game.inventory().slot(4) = persisted;
     game.select_hotbar_slot(4);
     assert(mcpi::storage::save_world(game, path));
 
     GameState loaded;
     assert(mcpi::storage::load_world(loaded, path));
-    assert(loaded.inventory().slot(4) == ItemStack{45, 23, 2});
+    assert(loaded.inventory().slot(4) == persisted);
     assert(loaded.selected_hotbar_slot() == 4);
     std::filesystem::remove(path);
 
