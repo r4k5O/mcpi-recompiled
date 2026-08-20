@@ -110,6 +110,22 @@ std::string format_ids(const std::vector<int>& ids) {
     return response;
 }
 
+bool apply_optional_camera_target(game::GameApi& game,
+                                  const std::vector<std::string>& arguments) {
+    if (arguments.empty()) {
+        return true;
+    }
+    if (arguments.size() != 1U) {
+        return false;
+    }
+    int entity_id = 0;
+    if (!parse_int(arguments[0], entity_id)) {
+        return false;
+    }
+    game.set_camera_target_entity(entity_id);
+    return true;
+}
+
 } // namespace
 
 ApiDispatcher::ApiDispatcher(game::GameApi& game)
@@ -273,14 +289,14 @@ std::optional<std::string> ApiDispatcher::dispatch(const Command& command) const
     }
 
     if (command.name == "camera.mode.setNormal") {
-        if (command.arguments.size() <= 1U) {
+        if (apply_optional_camera_target(game_, command.arguments)) {
             game_.set_camera_mode(game::CameraMode::Normal);
         }
         return std::nullopt;
     }
 
     if (command.name == "camera.mode.setThirdPerson" || command.name == "camera.mode.setFollow") {
-        if (command.arguments.size() <= 1U) {
+        if (apply_optional_camera_target(game_, command.arguments)) {
             game_.set_camera_mode(game::CameraMode::ThirdPerson);
         }
         return std::nullopt;
