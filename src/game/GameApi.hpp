@@ -78,6 +78,18 @@ public:
 
     virtual void set_camera_mode(CameraMode mode) = 0;
     virtual void set_camera_position(const Vec3& position) = 0;
+    [[nodiscard]] virtual CameraMode camera_mode() const noexcept {
+        return CameraMode::Normal;
+    }
+    [[nodiscard]] virtual Vec3 camera_position() const noexcept {
+        return {};
+    }
+    virtual void set_camera_target_entity(int id) {
+        (void)id;
+    }
+    [[nodiscard]] virtual int camera_target_entity() const noexcept {
+        return 0;
+    }
 
     [[nodiscard]] virtual std::vector<BlockHit> poll_block_hits() = 0;
     virtual void clear_events() = 0;
