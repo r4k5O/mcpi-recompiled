@@ -186,6 +186,8 @@ void Physics::move(
     box = entity.bounds();
     const double moved_x = clip_x(world, box, desired_delta.x);
     position.x += moved_x;
+    const double half_width = entity.width() * 0.5;
+    position.x = std::clamp(position.x, half_width, world_width - half_width);
     entity.set_position(position);
     if (std::abs(moved_x - desired_delta.x) > epsilon) {
         velocity.x = 0.0;
@@ -194,6 +196,7 @@ void Physics::move(
     box = entity.bounds();
     const double moved_z = clip_z(world, box, desired_delta.z);
     position.z += moved_z;
+    position.z = std::clamp(position.z, half_width, world_width - half_width);
     entity.set_position(position);
     if (std::abs(moved_z - desired_delta.z) > epsilon) {
         velocity.z = 0.0;
