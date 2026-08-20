@@ -39,6 +39,19 @@ int main() {
     static_assert(Chunk::depth == 16);
     static_assert(Chunk::block_count == 32768U);
 
+    // Strong-inference binary observation from candidate 0x000b46fc:
+    // low 32 bits of 0x07ebe2d5 * chunkZ + 0x14609048 * chunkX are formed
+    // before an RNG-like state is reinitialized. These vectors intentionally
+    // test only that confirmed coordinate component; world-seed expansion and
+    // noise usage remain open and must not be guessed here.
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(0, 0) == 0x00000000U);
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(1, 0) == 0x14609048U);
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(0, 1) == 0x07ebe2d5U);
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(4, 7) == 0x88f574f3U);
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(-1, 0) == 0xeb9f6fb8U);
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(0, -1) == 0xf8141d2bU);
+    assert(RandomLevelSource::observed_chunk_coordinate_mix(-2, 3) == 0xef0287efU);
+
     constexpr std::uint32_t seed = 0x12345678U;
     constexpr int chunk_x = 4;
     constexpr int chunk_z = 7;
