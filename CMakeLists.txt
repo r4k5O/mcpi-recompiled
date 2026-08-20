@@ -177,6 +177,9 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
 
+    add_executable(mcpi_python_compat_host tests/support/python_compat_host.cpp)
+    target_link_libraries(mcpi_python_compat_host PRIVATE mcpi_core)
+
     file(GLOB_RECURSE MCPI_JAVA_SOURCES CONFIGURE_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/clients/java/src/*.java
     )
@@ -247,6 +250,18 @@ if(MCPI_BUILD_TESTS)
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_smoke.py
                 $<TARGET_FILE:mcpi_python_api_host>
+    )
+    add_test(
+        NAME python_api_compatibility
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_api_compatibility.py
+                $<TARGET_FILE:mcpi_python_compat_host>
+    )
+    add_test(
+        NAME python_examples_smoke
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/python_examples_smoke.py
+                $<TARGET_FILE:mcpi_python_compat_host>
     )
     add_test(
         NAME main_executable_smoke
