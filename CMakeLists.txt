@@ -22,8 +22,10 @@ add_library(mcpi_core
     src/game/GameState.cpp
     src/parity/ReferenceCase.cpp
     src/parity/ReferenceSuite.cpp
+    src/storage/LegacyLevelStorage.cpp
     src/storage/Nbt.cpp
     src/storage/PiLevelStorage.cpp
+    src/storage/StorageRouter.cpp
     src/world/BlockBehavior.cpp
     src/world/Chunk.cpp
     src/world/LightEngine.cpp
