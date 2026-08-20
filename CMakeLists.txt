@@ -83,6 +83,16 @@ if(MCPI_BUILD_CLIENT)
     target_compile_definitions(mcpi-recompiled PRIVATE MCPI_BUILD_CLIENT=1 SDL_MAIN_HANDLED)
 endif()
 
+add_executable(mcpi-parity
+    src/parity/main.cpp
+)
+target_link_libraries(mcpi-parity PRIVATE mcpi_core)
+if(MSVC)
+    target_compile_options(mcpi-parity PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(mcpi-parity PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 if(MCPI_BUILD_TESTS)
     enable_testing()
     find_program(MCPI_PYTHON_EXECUTABLE NAMES python python3 REQUIRED)
