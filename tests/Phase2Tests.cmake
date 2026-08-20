@@ -14,8 +14,20 @@ mcpi_add_phase2_cpp_test(camera tests/camera_tests.cpp)
 mcpi_add_phase2_cpp_test(asset_source tests/asset_source_tests.cpp)
 mcpi_add_phase2_cpp_test(chunk_mesh tests/chunk_mesh_tests.cpp)
 mcpi_add_phase2_cpp_test(ui_audio tests/ui_audio_tests.cpp)
-mcpi_add_phase2_cpp_test(phase2_parity_acceptance tests/phase2_parity_acceptance_tests.cpp)
 mcpi_add_phase2_cpp_test(render_snapshot tests/render_snapshot.cpp)
+
+if(EXISTS "${PROJECT_SOURCE_DIR}/tests/phase2_parity_acceptance_tests.cpp")
+    add_executable(
+        mcpi_phase2_parity_acceptance_tests
+        "${PROJECT_SOURCE_DIR}/tests/phase2_parity_acceptance_tests.cpp"
+    )
+    target_link_libraries(mcpi_phase2_parity_acceptance_tests PRIVATE mcpi_core)
+    add_test(
+        NAME phase2_parity_acceptance
+        COMMAND mcpi_phase2_parity_acceptance_tests
+                ${PROJECT_SOURCE_DIR}/tests/parity/reference/api-transcripts.ref
+    )
+endif()
 
 if(MCPI_BUILD_CLIENT AND EXISTS "${PROJECT_SOURCE_DIR}/tests/assets_cli_smoke.py")
     add_test(
