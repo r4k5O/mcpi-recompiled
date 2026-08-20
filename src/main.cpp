@@ -1,6 +1,7 @@
 #include "api/ApiDispatcher.hpp"
 #include "api/ApiServer.hpp"
 #include "game/GameState.hpp"
+#include "storage/StorageRouter.hpp"
 
 #ifdef MCPI_BUILD_CLIENT
 #include "client/ClientApp.hpp"
@@ -58,7 +59,7 @@ void print_usage(const char* executable) {
         << "Usage: " << executable << " [options]\n"
         << "  --port <0-65535>     MCPI API port (default: 4711)\n"
         << "  --headless           Run API/world runtime without a window\n"
-        << "  --world <path>       World save path (default: world.mcpiworld)\n"
+        << "  --world <path>       World save path (default: world.mcpiworld; .dat uses Pi level.dat metadata)\n"
         << "  --seed <0-4294967295> Seed used when creating a new world\n"
         << "  --help, -h           Show this help\n";
 }
@@ -128,7 +129,7 @@ int main(int argc, char** argv) {
 
     if (headless) {
         if (std::filesystem::exists(world_path)) {
-            if (!game.load(world_path)) {
+            if (!mcpi::storage::load_world(game, world_path)) {
                 std::cerr << "Could not load world: " << world_path.string() << '\n';
                 return 3;
             }
@@ -174,7 +175,7 @@ int main(int argc, char** argv) {
     {
         std::scoped_lock lock(game_mutex);
         if (game.generated_world()) {
-            (void)game.save(world_path);
+            (void)mcpi::storage::save_world(game, world_path);
         }
     }
 
