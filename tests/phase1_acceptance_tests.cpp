@@ -47,26 +47,26 @@ int main() {
     require(initial_pos.has_value() && *initial_pos == "0,0,0",
             "MCPI player coordinates must be spawn-relative at world creation");
 
-    api.dispatch(command("player.setPos", {"2.5", "3", "-1.25"}));
+    (void)api.dispatch(command("player.setPos", {"2.5", "3", "-1.25"}));
     const auto moved = game.player_position();
     require(moved.x == spawn.x + 2.5 && moved.y == spawn.y + 3.0 && moved.z == spawn.z - 1.25,
             "spawn-relative API coordinates must translate into internal world coordinates");
 
-    api.dispatch(command("world.setBlock", {"3", "2", "4", "57", "3"}));
+    (void)api.dispatch(command("world.setBlock", {"3", "2", "4", "57", "3"}));
     const auto block = api.dispatch(command("world.getBlockWithData", {"3", "2", "4"}));
     require(block.has_value() && *block == "57,3",
             "API block id and metadata must round-trip through LevelChunk storage");
 
-    api.dispatch(command("world.setBlocks", {"-1", "1", "-1", "1", "2", "1", "41"}));
+    (void)api.dispatch(command("world.setBlocks", {"-1", "1", "-1", "1", "2", "1", "41"}));
     require(api.dispatch(command("world.getBlock", {"-1", "1", "-1"})) == std::optional<std::string>("41") &&
                 api.dispatch(command("world.getBlock", {"1", "2", "1"})) == std::optional<std::string>("41"),
             "world.setBlocks must fill both inclusive corners");
 
-    api.dispatch(command("world.checkpoint.save"));
-    api.dispatch(command("world.setBlock", {"3", "2", "4", "0"}));
+    (void)api.dispatch(command("world.checkpoint.save"));
+    (void)api.dispatch(command("world.setBlock", {"3", "2", "4", "0"}));
     require(api.dispatch(command("world.getBlock", {"3", "2", "4"})) == std::optional<std::string>("0"),
             "checkpoint acceptance setup must modify the world");
-    api.dispatch(command("world.checkpoint.restore"));
+    (void)api.dispatch(command("world.checkpoint.restore"));
     require(api.dispatch(command("world.getBlockWithData", {"3", "2", "4"})) == std::optional<std::string>("57,3"),
             "checkpoint restore must restore world and metadata state");
 

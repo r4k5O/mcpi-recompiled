@@ -87,9 +87,9 @@ struct ApiServer::Impl {
     explicit Impl(std::uint16_t requested_port)
         : requested_port(requested_port), bound_port(requested_port) {}
 
-    void run(NativeSocket listener) {
+    void run(NativeSocket listening_socket) {
         while (is_running.load()) {
-            const NativeSocket client = ::accept(listener, nullptr, nullptr);
+            const NativeSocket client = ::accept(listening_socket, nullptr, nullptr);
             if (client == kInvalidSocket) {
                 if (!is_running.load()) {
                     break;

@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
     {
         std::scoped_lock lock(game_mutex);
         if (game.generated_world()) {
-            game.save(world_path);
+            (void)game.save(world_path);
         }
     }
 

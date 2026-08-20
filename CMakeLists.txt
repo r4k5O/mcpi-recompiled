@@ -152,4 +152,9 @@ if(MCPI_BUILD_TESTS)
                 JavaApiSmoke
                 $<TARGET_FILE:mcpi-recompiled>
     )
+    add_test(
+        NAME release_workflow
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/release_workflow_tests.py
+    )
 endif()

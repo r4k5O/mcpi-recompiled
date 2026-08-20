@@ -145,7 +145,7 @@ int main() {
     }
 
     {
-        dispatcher.dispatch(command("player.setPos", {"10.5", "20", "-3.25"}));
+        (void)dispatcher.dispatch(command("player.setPos", {"10.5", "20", "-3.25"}));
         expect(game.set_position_calls == 1, "player.setPos should update the game bridge");
         expect(game.position.x == 110.5 && game.position.y == 84.0 && game.position.z == 196.75,
                "player.setPos should translate API coordinates by SpawnX/Y/Z");
@@ -157,7 +157,7 @@ int main() {
         expect(response.has_value() && *response == "1,2,3",
                "player.getTile should floor and translate the player position");
 
-        dispatcher.dispatch(command("player.setTile", {"-2", "5", "7"}));
+        (void)dispatcher.dispatch(command("player.setTile", {"-2", "5", "7"}));
         expect(game.position.x == 98.0 && game.position.y == 69.0 && game.position.z == 207.0,
                "player.setTile should translate integer API coordinates to internal coordinates");
     }
@@ -174,13 +174,13 @@ int main() {
     }
 
     {
-        dispatcher.dispatch(command("world.setBlock", {"1", "2", "3", "35", "14"}));
+        (void)dispatcher.dispatch(command("world.setBlock", {"1", "2", "3", "35", "14"}));
         expect(game.last_block_x == 101 && game.last_block_y == 66 && game.last_block_z == 203,
                "world.setBlock should use internal spawn-shifted coordinates");
         expect(game.last_block_type == 35 && game.last_block_data == 14,
                "world.setBlock should preserve id and data");
 
-        dispatcher.dispatch(command("world.setBlocks", {"-1", "-2", "-3", "2", "3", "4", "41", "7"}));
+        (void)dispatcher.dispatch(command("world.setBlocks", {"-1", "-2", "-3", "2", "3", "4", "41", "7"}));
         expect(game.set_blocks_calls == 1,
                "world.setBlocks should call the bulk game bridge");
         expect(game.range == std::vector<int>({99, 62, 197, 102, 67, 204}),
@@ -198,42 +198,42 @@ int main() {
     }
 
     {
-        dispatcher.dispatch(command("world.checkpoint.save"));
-        dispatcher.dispatch(command("world.checkpoint.restore"));
+        (void)dispatcher.dispatch(command("world.checkpoint.save"));
+        (void)dispatcher.dispatch(command("world.checkpoint.restore"));
         expect(game.checkpoint_save_calls == 1 && game.checkpoint_restore_calls == 1,
                "checkpoint commands should reach GameApi");
 
-        dispatcher.dispatch(command("world.setting", {"world_immutable", "1"}));
+        (void)dispatcher.dispatch(command("world.setting", {"world_immutable", "1"}));
         expect(game.world_setting_calls == 1 && game.last_setting_key == "world_immutable" && game.last_setting_value,
                "world.setting should forward boolean settings");
 
-        dispatcher.dispatch(command("player.setting", {"autojump", "0"}));
+        (void)dispatcher.dispatch(command("player.setting", {"autojump", "0"}));
         expect(game.player_setting_calls == 1 && game.last_setting_key == "autojump" && !game.last_setting_value,
                "player.setting should support the distributed client API");
     }
 
     {
-        dispatcher.dispatch(command("camera.mode.setNormal"));
+        (void)dispatcher.dispatch(command("camera.mode.setNormal"));
         expect(game.camera_mode == mcpi::game::CameraMode::Normal,
                "camera normal mode should be supported");
 
-        dispatcher.dispatch(command("camera.mode.setThirdPerson"));
+        (void)dispatcher.dispatch(command("camera.mode.setThirdPerson"));
         expect(game.camera_mode == mcpi::game::CameraMode::ThirdPerson,
                "protocol third-person camera command should be supported");
 
-        dispatcher.dispatch(command("camera.mode.setFollow"));
+        (void)dispatcher.dispatch(command("camera.mode.setFollow"));
         expect(game.camera_mode == mcpi::game::CameraMode::ThirdPerson,
                "distributed client setFollow alias should be supported");
 
-        dispatcher.dispatch(command("camera.mode.setFixed"));
+        (void)dispatcher.dispatch(command("camera.mode.setFixed"));
         expect(game.camera_mode == mcpi::game::CameraMode::Fixed,
                "fixed camera mode should be supported");
 
-        dispatcher.dispatch(command("camera.mode.setPos", {"1.5", "2", "3.25"}));
+        (void)dispatcher.dispatch(command("camera.mode.setPos", {"1.5", "2", "3.25"}));
         expect(game.camera_position.x == 101.5 && game.camera_position.y == 66.0 && game.camera_position.z == 203.25,
                "protocol camera position should be spawn-relative");
 
-        dispatcher.dispatch(command("camera.setPos", {"2", "3", "4"}));
+        (void)dispatcher.dispatch(command("camera.setPos", {"2", "3", "4"}));
         expect(game.camera_position.x == 102.0 && game.camera_position.y == 67.0 && game.camera_position.z == 204.0,
                "distributed client camera.setPos alias should be supported");
     }
@@ -244,12 +244,12 @@ int main() {
                "block-hit events should be serialized with spawn-relative positions");
         expect(game.poll_hits_calls == 1, "events.block.hits should poll GameApi once");
 
-        dispatcher.dispatch(command("events.clear"));
+        (void)dispatcher.dispatch(command("events.clear"));
         expect(game.clear_events_calls == 1, "events.clear should clear queued events");
     }
 
     {
-        dispatcher.dispatch(command("chat.post", {"Hello from Python and Java"}));
+        (void)dispatcher.dispatch(command("chat.post", {"Hello from Python and Java"}));
         expect(game.chat_calls == 1 && game.last_chat_message == "Hello from Python and Java",
                "chat.post should forward the message unchanged");
     }

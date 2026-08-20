@@ -37,6 +37,16 @@ The following remain reconstruction/parity work rather than being silently treat
 
 Those items are now easier to tackle because Phase 1 provides a tested executable, game state, chunk model, save lifecycle, API clients, and reverse-engineering evidence base.
 
+## Releases
+
+Version tags matching `v*` are built and tested automatically on Linux x86-64 and Windows x86-64 before a GitHub Release is published. Release assets include platform archives and `SHA256SUMS.txt`; release notes are generated automatically.
+
+The release workflows deliberately use maintained GitHub Action majors. CI also installs the Linux SDL development dependencies needed by the enabled backends, and project warnings are fixed in source rather than hidden by weaker compiler flags.
+
+The intended first public release is **`v0.1.0`**, representing the completed Phase-1 functional baseline. It is also the recommended fork point for projects that want to modernize gameplay, visuals, UI, or other behavior separately from this repository's original-parity work.
+
+The project code license must be documented before that first public release is tagged.
+
 ## Run
 
 A normal build starts the desktop client:
@@ -81,7 +91,7 @@ cmake --build build --config Release --parallel
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, and the built main executable.
+Tests include protocol parsing, TCP transport, dispatcher compatibility, LevelChunk layout, world lifecycle/save-load behavior, the integrated Phase-1 acceptance gate, a real Python client, a real Java client, the built main executable, and a workflow contract that guards the maintained GitHub Action majors used by CI/releases.
 
 ## Reconstruction approach
 
