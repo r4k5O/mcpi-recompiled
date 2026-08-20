@@ -34,6 +34,13 @@ def main() -> int:
         "release permission": "contents: write",
         "release preparation job": "prepare:",
         "semantic tag discovery": "git tag --list 'v[0-9]*.[0-9]*.[0-9]*'",
+        "custom input precedence": 'if [[ -n "$CUSTOM_VERSION" ]]; then',
+        "custom input forces custom mode": 'RELEASE_TYPE="custom"',
+        "requested type log": 'echo "Requested release type: $RELEASE_TYPE"',
+        "requested custom version log": 'echo "Requested custom version: ${CUSTOM_VERSION:-<empty>}"',
+        "resolved tag log": 'echo "Resolved release tag: $tag"',
+        "custom resolution guard": 'expected_custom="v${CUSTOM_VERSION#v}"',
+        "custom mismatch failure": 'Custom release mismatch:',
         "annotated tag creation": 'git tag -a "$tag"',
         "tag push": 'git push origin "$tag"',
         "build prepared tag checkout": "ref: ${{ needs.prepare.outputs.tag }}",
@@ -68,7 +75,7 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with maintained action majors and manual semantic releases.")
+    print("GitHub workflow/release contract passed with maintained action majors and guarded custom semantic releases.")
     return 0
 
 
