@@ -3,6 +3,7 @@
 #include "world/Chunk.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <unordered_map>
 
@@ -22,10 +23,17 @@ public:
     void set_block(const BlockPos& position, const BlockState& block);
     [[nodiscard]] int height_at(int x, int z) const noexcept;
 
+    [[nodiscard]] std::uint8_t sky_light_at(const BlockPos& position) const noexcept;
+    [[nodiscard]] std::uint8_t block_light_at(const BlockPos& position) const noexcept;
+    void set_sky_light(const BlockPos& position, std::uint8_t light) noexcept;
+    void set_block_light(const BlockPos& position, std::uint8_t light) noexcept;
+    [[nodiscard]] bool has_chunk_at(const BlockPos& position) const noexcept;
+
     [[nodiscard]] std::size_t chunk_count() const noexcept;
     void clear() noexcept;
 
     void for_each_chunk(const std::function<void(const Chunk&)>& visitor) const;
+    void for_each_chunk_mutable(const std::function<void(Chunk&)>& visitor);
 
 private:
     struct ChunkPosHash {
