@@ -2,6 +2,8 @@
 
 Target: **Minecraft: Pi Edition 0.1.1 alpha**.
 
+**Phase 2 implementation is complete.** This table intentionally remains the authoritative evidence ledger for original-behavior parity after Phase 2; implementation completion does not convert `partial`, `confirmed`, or `unknown` claims into `matched`. See [`phase2-completion.md`](phase2-completion.md) for the closure gate and remaining research scope.
+
 Statuses are evidence claims, not progress vibes:
 
 - `unknown` — not enough original evidence yet;
