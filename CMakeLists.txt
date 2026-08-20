@@ -188,4 +188,9 @@ if(MCPI_BUILD_TESTS)
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/release_workflow_tests.py
     )
+    add_test(
+        NAME reverse_engineering_docs
+        COMMAND ${MCPI_PYTHON_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/reverse_engineering_docs_tests.py
+    )
 endif()
