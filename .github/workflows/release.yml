@@ -67,8 +67,6 @@ jobs:
             echo "Requested release type: $RELEASE_TYPE"
             echo "Requested custom version: ${CUSTOM_VERSION:-<empty>}"
 
-            # A supplied custom version is authoritative. This protects against
-            # stale/default dropdown values being submitted alongside the text input.
             if [[ -n "$CUSTOM_VERSION" ]]; then
               RELEASE_TYPE="custom"
             fi
@@ -155,9 +153,19 @@ jobs:
           - os: ubuntu-latest
             name: Linux x86-64
             artifact: release-linux-x86_64
+            package_suffix: linux-x86_64
           - os: windows-latest
             name: Windows x86-64
             artifact: release-windows-x86_64
+            package_suffix: windows-x86_64
+          - os: macos-latest
+            name: macOS ARM64
+            artifact: release-macos-arm64
+            package_suffix: macos-arm64
+          - os: macos-15-intel
+            name: macOS x86-64
+            artifact: release-macos-x86_64
+            package_suffix: macos-x86_64
 
     env:
       RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
@@ -196,12 +204,12 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
 
-      - name: Package Linux x86-64
-        if: runner.os == 'Linux'
+      - name: Package Unix native client
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
-          package="mcpi-recompiled-${RELEASE_TAG}-linux-x86_64"
+          package="mcpi-recompiled-${RELEASE_TAG}-${{ matrix.package_suffix }}"
           mkdir -p "dist/${package}"
           cp build/mcpi-recompiled "dist/${package}/mcpi-recompiled"
           cp README.md LICENSE NOTICE LEGAL.md "dist/${package}/"
@@ -209,12 +217,12 @@ jobs:
           tar -C dist -czf "dist/${package}.tar.gz" "${package}"
           rm -rf "dist/${package}"
 
-      - name: Package Windows x86-64
+      - name: Package Windows native client
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $package = "mcpi-recompiled-$env:RELEASE_TAG-windows-x86_64"
+          $package = "mcpi-recompiled-$env:RELEASE_TAG-${{ matrix.package_suffix }}"
           New-Item -ItemType Directory -Force -Path "dist/$package" | Out-Null
           Copy-Item "build/Release/mcpi-recompiled.exe" "dist/$package/mcpi-recompiled.exe"
           Copy-Item "README.md", "LICENSE", "NOTICE", "LEGAL.md" "dist/$package/"
@@ -231,11 +239,48 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  cross-build:
+    name: Build Linux ${{ matrix.arch }} cross-build
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: ARM64
+            packages: gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+            toolchain: cmake/toolchains/linux-arm64.cmake
+          - arch: ARM32
+            packages: gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+            toolchain: cmake/toolchains/linux-arm32.cmake
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+
+      - name: Install cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.packages }}
+
+      - name: Configure cross-build
+        run: >-
+          cmake -S . -B build-cross
+          -DMCPI_BUILD_TESTS=OFF
+          -DMCPI_BUILD_CLIENT=OFF
+          -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }}
+
+      - name: Build cross-build
+        run: cmake --build build-cross --config Release --parallel
+
   publish:
     name: Publish GitHub Release
     needs:
       - prepare
       - build
+      - cross-build
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -267,4 +312,6 @@ jobs:
           files: |
             release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-linux-x86_64.tar.gz
             release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-windows-x86_64.zip
+            release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-macos-arm64.tar.gz
+            release-assets/mcpi-recompiled-${{ needs.prepare.outputs.tag }}-macos-x86_64.tar.gz
             release-assets/SHA256SUMS.txt
