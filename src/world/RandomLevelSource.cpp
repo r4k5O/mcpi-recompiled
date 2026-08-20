@@ -7,6 +7,16 @@ namespace mcpi::world {
 RandomLevelSource::RandomLevelSource(std::uint32_t seed) noexcept
     : seed_(seed) {}
 
+std::uint32_t RandomLevelSource::observed_chunk_coordinate_mix(
+    int chunk_x,
+    int chunk_z) noexcept {
+    // ARM 32-bit integer arithmetic preserves the low 32 bits. Converting the
+    // coordinates to uint32_t gives the same modulo-2^32 behavior for negative
+    // chunk coordinates without relying on signed overflow.
+    return 0x07ebe2d5U * static_cast<std::uint32_t>(chunk_z) +
+           0x14609048U * static_cast<std::uint32_t>(chunk_x);
+}
+
 std::uint32_t RandomLevelSource::phase1_hash(std::uint32_t seed, int x, int z) noexcept {
     std::uint32_t value = seed;
     value ^= static_cast<std::uint32_t>(x) * 0x9e3779b9U;
