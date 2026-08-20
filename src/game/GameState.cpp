@@ -51,6 +51,8 @@ void GameState::new_world(std::uint32_t seed) {
     seed_ = seed;
     generated_world_ = true;
     world::WorldGenerator::generate(world_, seed_);
+    light_engine_.rebuild(world_);
+    block_updates_.clear();
     changes_.clear();
     checkpoint_.reset();
     reset_hotbar();
@@ -147,6 +149,7 @@ bool GameState::load(const std::filesystem::path& path) {
         world_.clear();
         changes_.clear();
         checkpoint_.reset();
+        block_updates_.clear();
     }
 
     spawn_position_ = loaded_spawn;
@@ -159,6 +162,8 @@ bool GameState::load(const std::filesystem::path& path) {
         const auto position = block_position(key);
         world_.set_block(position, block);
     }
+    light_engine_.rebuild(world_);
+    block_updates_.clear();
 
     camera_position_ = player_position_;
     return true;
@@ -208,9 +213,18 @@ void GameState::set_block(int x, int y, int z, int block_type, int block_data) {
     if (!inside_world(x, y, z)) {
         return;
     }
-    const world::BlockState block{block_type, block_data};
-    world_.set_block({x, y, z}, block);
-    changes_.insert_or_assign(block_key(x, y, z), block);
+
+    const world::BlockPos position{x, y, z};
+    const world::BlockState before = world_.block_at(position);
+    const world::BlockState after{block_type, block_data};
+
+    world_.set_block(position, after);
+    changes_.insert_or_assign(block_key(x, y, z), after);
+    block_updates_.on_block_changed(world_, position, before, after);
+
+    if (before != after) {
+        light_engine_.on_block_changed(world_, position, before, after);
+    }
 }
 
 void GameState::set_blocks(int x1, int y1, int z1,
@@ -227,12 +241,25 @@ void GameState::set_blocks(int x1, int y1, int z1,
         return;
     }
 
+    const world::BlockState after{block_type, block_data};
+    bool changed = false;
+
     for (int x = min_x; x <= max_x; ++x) {
         for (int z = min_z; z <= max_z; ++z) {
             for (int y = min_y; y <= max_y; ++y) {
-                set_block(x, y, z, block_type, block_data);
+                const world::BlockPos position{x, y, z};
+                const world::BlockState before = world_.block_at(position);
+
+                world_.set_block(position, after);
+                changes_.insert_or_assign(block_key(x, y, z), after);
+                block_updates_.on_block_changed(world_, position, before, after);
+                changed = changed || before != after;
             }
         }
+    }
+
+    if (changed) {
+        light_engine_.rebuild(world_);
     }
 }
 
@@ -292,6 +319,7 @@ void GameState::restore_checkpoint() {
     world_ = checkpoint_->world;
     player_position_ = checkpoint_->player_position;
     changes_ = checkpoint_->changes;
+    block_updates_.clear();
 }
 
 void GameState::set_world_setting(const std::string& key, bool value) {
