@@ -13,7 +13,17 @@ class ApiDispatcher {
 public:
     explicit ApiDispatcher(game::GameApi& game);
 
-    [[nodiscard]] CommandResult dispatch_result(const Command& command) const;
+    [[nodiscard]] CommandResult dispatch_result(const Command& command) const {
+        const auto legacy = dispatch(command);
+        if (!legacy.has_value()) {
+            return CommandResult::no_response();
+        }
+        if (*legacy == "Fail") {
+            return CommandResult::fail();
+        }
+        return CommandResult::response_value(*legacy);
+    }
+
     [[nodiscard]] std::optional<std::string> dispatch(const Command& command) const;
 
 private:
