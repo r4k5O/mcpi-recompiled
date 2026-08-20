@@ -1,6 +1,8 @@
 #pragma once
 
 #include "game/GameApi.hpp"
+#include "world/BlockBehavior.hpp"
+#include "world/LightEngine.hpp"
 #include "world/World.hpp"
 
 #include <array>
@@ -93,6 +95,8 @@ private:
     IVec3 spawn_position_{128, 64, 128};
     Vec3 player_position_{128.0, 64.0, 128.0};
     world::World world_;
+    world::LightEngine light_engine_;
+    world::BlockUpdateEngine block_updates_;
     std::unordered_map<std::uint32_t, world::BlockState> changes_;
     std::array<int, hotbar_size> hotbar_{};
     int selected_hotbar_slot_ = 0;
