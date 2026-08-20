@@ -59,6 +59,14 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
 
+      - name: Upload deterministic reconstruction frame
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reconstruction-frame-${{ matrix.name }}
+          path: build/parity-artifacts/reconstruction.ppm
+          if-no-files-found: ignore
+
   cross-build:
     name: Linux ${{ matrix.arch }} cross-build
     runs-on: ubuntu-latest
