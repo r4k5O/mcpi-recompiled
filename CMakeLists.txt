@@ -19,8 +19,11 @@ add_library(mcpi_core
     src/api/ApiDispatcher.cpp
     src/api/ApiServer.cpp
     src/api/Command.cpp
+    src/game/Entity.cpp
     src/game/GameState.cpp
     src/game/Inventory.cpp
+    src/game/Physics.cpp
+    src/game/Player.cpp
     src/parity/ReferenceCase.cpp
     src/parity/ReferenceSuite.cpp
     src/storage/LegacyLevelStorage.cpp
