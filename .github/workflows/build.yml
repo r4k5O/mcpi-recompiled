@@ -112,11 +112,27 @@ jobs:
                 libasound2-dev \
                 libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev \
                 libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+                libdrm-dev libgbm-dev libudev-dev libdbus-1-dev \
                 libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev
 
               cmake -S . -B build-arm \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DMCPI_BUILD_TESTS=OFF \
-                -DMCPI_BUILD_CLIENT=ON
+                -DMCPI_BUILD_CLIENT=ON \
+                -DSDL_X11=ON \
+                -DSDL_ALSA=ON \
+                -DSDL_KMSDRM=ON \
+                -DSDL_LIBUDEV=ON \
+                -DSDL_DBUS=ON \
+                -DSDL_WAYLAND=OFF \
+                -DSDL_PULSEAUDIO=OFF \
+                -DSDL_PIPEWIRE=OFF \
+                -DSDL_JACK=OFF \
+                -DSDL_SNDIO=OFF \
+                -DSDL_HIDAPI_LIBUSB=OFF \
+                -DSDL_IBUS=OFF \
+                -DSDL_LIBURING=OFF \
+                -DSDL_RPI=OFF
               cmake --build build-arm --config Release --parallel 2
 
               test -x "build-arm/mcpi-recompiled"

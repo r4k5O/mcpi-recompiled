@@ -93,6 +93,33 @@ def main() -> int:
     for label, fragment in build_fragments.items():
         require_fragment(build, fragment, label)
 
+    # ARM builds run in a deliberately minimal target userland. Keep the SDL backend
+    # set explicit so they do not depend on packages preinstalled on hosted x86 runners.
+    arm_sdl_fragments = {
+        "DRM development headers": "libdrm-dev",
+        "GBM development headers": "libgbm-dev",
+        "udev development headers": "libudev-dev",
+        "dbus development headers": "libdbus-1-dev",
+        "release build type": "-DCMAKE_BUILD_TYPE=Release",
+        "X11 backend": "-DSDL_X11=ON",
+        "ALSA backend": "-DSDL_ALSA=ON",
+        "KMSDRM backend": "-DSDL_KMSDRM=ON",
+        "udev backend": "-DSDL_LIBUDEV=ON",
+        "dbus backend": "-DSDL_DBUS=ON",
+        "Wayland disabled baseline": "-DSDL_WAYLAND=OFF",
+        "PulseAudio disabled baseline": "-DSDL_PULSEAUDIO=OFF",
+        "PipeWire disabled baseline": "-DSDL_PIPEWIRE=OFF",
+        "JACK disabled baseline": "-DSDL_JACK=OFF",
+        "sndio disabled baseline": "-DSDL_SNDIO=OFF",
+        "libusb HID disabled baseline": "-DSDL_HIDAPI_LIBUSB=OFF",
+        "IBus disabled baseline": "-DSDL_IBUS=OFF",
+        "io_uring disabled baseline": "-DSDL_LIBURING=OFF",
+        "legacy RPI backend disabled": "-DSDL_RPI=OFF",
+    }
+    for workflow_name, text in (("build", build), ("release", release)):
+        for label, fragment in arm_sdl_fragments.items():
+            require_fragment(text, fragment, f"{workflow_name} ARM {label}")
+
     # Manual releases must not publish a tag until build/test/package jobs have passed.
     require('git tag -a "$tag"' not in release, "prepare must not create the release tag")
     require('git push origin "$tag"' not in release, "prepare must not push the release tag")
@@ -125,7 +152,7 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with six full client platform builds, including ARM64 and ARM32.")
+    print("GitHub workflow/release contract passed with deterministic ARM SDL full-client builds.")
     return 0
 
 
