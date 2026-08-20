@@ -142,6 +142,11 @@ void Chunk::set_block_light(const LocalBlockPos& position, std::uint8_t light) n
     set_nibble(block_light_, block_index(position), light);
 }
 
+void Chunk::clear_lighting() noexcept {
+    sky_light_.fill(0U);
+    block_light_.fill(0U);
+}
+
 int Chunk::height_at(int local_x, int local_z) const noexcept {
     if (!valid_column(local_x, local_z)) {
         return 0;
