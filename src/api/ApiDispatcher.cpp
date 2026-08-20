@@ -99,6 +99,17 @@ bool parse_vec3(const std::vector<std::string>& arguments,
            parse_double(arguments[offset + 2U], value.z);
 }
 
+std::string format_ids(const std::vector<int>& ids) {
+    std::string response;
+    for (const int id : ids) {
+        if (!response.empty()) {
+            response.push_back('|');
+        }
+        response += std::to_string(id);
+    }
+    return response;
+}
+
 } // namespace
 
 ApiDispatcher::ApiDispatcher(game::GameApi& game)
@@ -319,18 +330,34 @@ std::optional<std::string> ApiDispatcher::dispatch(const Command& command) const
         return std::nullopt;
     }
 
-    // Present in the distributed Python/Java clients even though entities were
-    // still marked TBD in MCPI-PROTOCOL 0.1. Phase 1 exposes the local player
-    // as entity 0 so those clients can operate without a second entity system.
     if (command.name == "world.getPlayerIds") {
-        return command.arguments.empty() ? std::optional<std::string>("0") : failed_request();
+        if (!command.arguments.empty()) {
+            return failed_request();
+        }
+        return format_ids(game_.player_ids());
     }
 
-    if (command.name == "entity.getPos" && command.arguments.size() == 1U) {
-        return format_vec3(outgoing(game_.player_position(), spawn));
+    if (command.name == "entity.getPos") {
+        if (command.arguments.size() != 1U) {
+            return failed_request();
+        }
+        int id = 0;
+        game::Vec3 position;
+        if (!parse_int(command.arguments[0], id) || !game_.entity_position(id, position)) {
+            return failed_request();
+        }
+        return format_vec3(outgoing(position, spawn));
     }
-    if (command.name == "entity.getTile" && command.arguments.size() == 1U) {
-        const auto exact = game_.player_position();
+
+    if (command.name == "entity.getTile") {
+        if (command.arguments.size() != 1U) {
+            return failed_request();
+        }
+        int id = 0;
+        game::Vec3 exact;
+        if (!parse_int(command.arguments[0], id) || !game_.entity_position(id, exact)) {
+            return failed_request();
+        }
         const game::IVec3 tile{
             static_cast<int>(std::floor(exact.x)),
             static_cast<int>(std::floor(exact.y)),
@@ -338,18 +365,30 @@ std::optional<std::string> ApiDispatcher::dispatch(const Command& command) const
         };
         return format_ivec3(outgoing(tile, spawn));
     }
-    if (command.name == "entity.setPos" && command.arguments.size() == 4U) {
+
+    if (command.name == "entity.setPos") {
+        if (command.arguments.size() != 4U) {
+            return std::nullopt;
+        }
+        int id = 0;
         game::Vec3 position;
-        if (parse_vec3(command.arguments, 1U, position)) {
-            game_.set_player_position(incoming(position, spawn));
+        if (parse_int(command.arguments[0], id) &&
+            parse_vec3(command.arguments, 1U, position)) {
+            (void)game_.set_entity_position(id, incoming(position, spawn));
         }
         return std::nullopt;
     }
-    if (command.name == "entity.setTile" && command.arguments.size() == 4U) {
+
+    if (command.name == "entity.setTile") {
+        if (command.arguments.size() != 4U) {
+            return std::nullopt;
+        }
+        int id = 0;
         game::IVec3 position;
-        if (parse_ivec3(command.arguments, 1U, position)) {
+        if (parse_int(command.arguments[0], id) &&
+            parse_ivec3(command.arguments, 1U, position)) {
             const auto internal = incoming(position, spawn);
-            game_.set_player_position({
+            (void)game_.set_entity_position(id, {
                 static_cast<double>(internal.x),
                 static_cast<double>(internal.y),
                 static_cast<double>(internal.z),
