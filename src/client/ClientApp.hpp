@@ -12,6 +12,7 @@ namespace mcpi::client {
 struct ClientOptions {
     std::filesystem::path world_path = "world.mcpiworld";
     std::optional<std::uint32_t> seed;
+    std::optional<std::filesystem::path> asset_path;
 };
 
 class ClientApp {

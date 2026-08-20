@@ -89,6 +89,8 @@ if(MCPI_BUILD_CLIENT)
     endif()
 endif()
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Phase2Sources.cmake)
+
 add_executable(mcpi-recompiled
     src/main.cpp
 )
