@@ -49,7 +49,7 @@ def main() -> int:
         "Linux release runner": "ubuntu-latest",
         "Windows release runner": "windows-latest",
         "Linux archive": "linux-x86_64.tar.gz",
-        "Windows archive": "windows_x86_64.zip",
+        "Windows archive": "windows-x86_64.zip",
         "checksums": "SHA256SUMS.txt",
         "generated notes": "generate_release_notes: true",
         "explicit release tag": "tag_name: ${{ needs.prepare.outputs.tag }}",
