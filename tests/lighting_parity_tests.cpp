@@ -1,9 +1,11 @@
+#include "game/GameState.hpp"
 #include "world/LightEngine.hpp"
 #include "world/World.hpp"
 
 #include <cassert>
 
 int main() {
+    using mcpi::game::GameState;
     using mcpi::world::BlockPos;
     using mcpi::world::BlockState;
     using mcpi::world::LightEngine;
@@ -51,6 +53,17 @@ int main() {
     engine.rebuild(boundary_world);
     assert(boundary_world.block_light_at({15, 5, 0}) == 15U);
     assert(boundary_world.block_light_at({16, 5, 0}) == 14U);
+
+    // GameState block writes must own lighting updates; callers should not need
+    // to know that a separate LightEngine exists.
+    GameState game_state;
+    game_state.set_block(5, 5, 5, 89, 0);
+    assert(game_state.world().block_light_at({5, 5, 5}) == 15U);
+    assert(game_state.world().block_light_at({6, 5, 5}) == 14U);
+
+    game_state.set_block(5, 5, 5, 0, 0);
+    assert(game_state.world().block_light_at({5, 5, 5}) == 0U);
+    assert(game_state.world().block_light_at({6, 5, 5}) == 0U);
 
     return 0;
 }
