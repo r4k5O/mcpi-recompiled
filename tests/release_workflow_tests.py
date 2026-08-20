@@ -1,9 +1,15 @@
+import os
 from pathlib import Path
+import shutil
+import subprocess
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_WORKFLOW = ROOT / ".github" / "workflows" / "build.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+SETUP_SCRIPT = ROOT / "setup.sh"
+SETUP_TEST = ROOT / "tests" / "setup_script_tests.py"
 
 
 def require(condition: bool, message: str) -> None:
@@ -18,9 +24,12 @@ def require_fragment(text: str, fragment: str, label: str) -> None:
 def main() -> int:
     require(BUILD_WORKFLOW.exists(), "build workflow must exist at .github/workflows/build.yml")
     require(RELEASE_WORKFLOW.exists(), "release workflow must exist at .github/workflows/release.yml")
+    require(SETUP_SCRIPT.exists(), "automatic asset setup must exist at setup.sh")
+    require(SETUP_TEST.exists(), "setup regression test must exist at tests/setup_script_tests.py")
 
     build = BUILD_WORKFLOW.read_text(encoding="utf-8")
     release = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    setup = SETUP_SCRIPT.read_text(encoding="utf-8")
 
     release_fragments = {
         "version tag trigger": 'tags:\n      - "v*"',
@@ -74,10 +83,21 @@ def main() -> int:
         "generated notes": "generate_release_notes: true",
         "explicit release tag": "tag_name: ${{ needs.prepare.outputs.tag }}",
         "release target commit": "target_commitish: ${{ needs.prepare.outputs.source_sha }}",
+        "Unix setup script packaging": "cp README.md LICENSE NOTICE LEGAL.md setup.sh",
+        "Unix setup executable bit": 'chmod +x "dist/${package}/setup.sh"',
     }
 
     for label, fragment in release_fragments.items():
         require_fragment(release, fragment, label)
+
+    require(
+        release.count("cp README.md LICENSE NOTICE LEGAL.md setup.sh") >= 2,
+        "setup.sh must be packaged in both native Unix and ARM release archives",
+    )
+    require(
+        release.count('chmod +x "dist/${package}/setup.sh"') >= 2,
+        "setup.sh must be executable in both native Unix and ARM release archives",
+    )
 
     build_fragments = {
         "CI ARM full-client job": "arm-build:",
@@ -152,7 +172,32 @@ def main() -> int:
     ):
         require(deprecated not in release, f"release workflow must not use deprecated action: {deprecated}")
 
-    print("GitHub workflow/release contract passed with deterministic ARM SDL full-client builds.")
+    setup_fragments = {
+        "official Minecraft download": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/software/minecraft-pi-0.1.1.tar.gz.zip",
+        "local archive override": "MCPI_ARCHIVE",
+        "asset root override": "MCPI_ASSETS",
+        "safe ZIP parser": "zipfile",
+        "safe tar parser": "tarfile",
+        "asset-only mode": "--assets-only",
+        "forced reinstall mode": "--force",
+    }
+    for label, fragment in setup_fragments.items():
+        require(fragment in setup, f"setup.sh missing {label}: {fragment!r}")
+
+    # The functional extraction test uses bash, so run it on Unix CI while Windows
+    # still enforces all static packaging/download contracts above.
+    if os.name != "nt" and shutil.which("bash"):
+        result = subprocess.run(
+            [sys.executable, str(SETUP_TEST)],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        require(result.returncode == 0, f"setup script functional regression failed:\n{result.stdout}")
+
+    print("GitHub workflow/release contract passed with deterministic ARM builds and automatic Pi asset setup.")
     return 0
 
 
