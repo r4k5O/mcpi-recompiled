@@ -144,6 +144,9 @@ if(MCPI_BUILD_TESTS)
     add_executable(mcpi_storage_parity_tests tests/storage_parity_tests.cpp)
     target_link_libraries(mcpi_storage_parity_tests PRIVATE mcpi_core)
 
+    add_executable(mcpi_inventory_tests tests/inventory_tests.cpp)
+    target_link_libraries(mcpi_inventory_tests PRIVATE mcpi_core)
+
     add_executable(mcpi_python_api_host tests/support/python_api_host.cpp)
     target_link_libraries(mcpi_python_api_host PRIVATE mcpi_core)
 
@@ -187,6 +190,7 @@ if(MCPI_BUILD_TESTS)
     add_test(NAME lighting_parity COMMAND mcpi_lighting_parity_tests)
     add_test(NAME block_behavior COMMAND mcpi_block_behavior_tests)
     add_test(NAME storage_parity COMMAND mcpi_storage_parity_tests)
+    add_test(NAME inventory COMMAND mcpi_inventory_tests)
     add_test(
         NAME python_api_smoke
         COMMAND ${MCPI_PYTHON_EXECUTABLE}
