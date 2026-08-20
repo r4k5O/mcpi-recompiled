@@ -7,6 +7,7 @@
 #include "world/LightEngine.hpp"
 #include "world/World.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -65,6 +66,9 @@ public:
     [[nodiscard]] int selected_block() const noexcept;
     void place_selected_block(int x, int y, int z);
     void break_block(int x, int y, int z);
+
+    [[nodiscard]] std::size_t scheduled_block_tick_count() const noexcept;
+    bool deliver_scheduled_block_tick(world::BlockPos& position) noexcept;
 
     void save_checkpoint() override;
     void restore_checkpoint() override;
